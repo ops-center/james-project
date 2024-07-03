@@ -47,6 +47,9 @@
                 <processor>blacklisted</processor>
             </mailet>
             -->
+            <mailet match="matchers.TrueBlacklist" class="ToProcessor">
+                <processor>blacklisted</processor>
+            </mailet>
              <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
