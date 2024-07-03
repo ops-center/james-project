@@ -449,9 +449,9 @@
                         <image>eclipse-temurin:21-jre-jammy</image>
                     </from>
                     <to>
-                        <image>shn27/distributed-james-test</image>
+                        <image>sami/distributed-james-test</image>
                         <tags>
-                            <tag>chibenwa-fix-and</tag>
+                            <tag>appscode-only</tag>
                         </tags>
                     </to>
                     <container>

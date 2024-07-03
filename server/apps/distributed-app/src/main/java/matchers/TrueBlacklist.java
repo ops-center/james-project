@@ -19,17 +19,14 @@
 
 package matchers;
 
-import com.github.steveash.guavate.Guavate;
-import org.apache.james.core.Domain;
+import java.util.Collection;
+
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import java.util.Collection;
-
-import static org.apache.james.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
-
+import com.github.steveash.guavate.Guavate;
 
 public class TrueBlacklist extends GenericMatcher {
     TrueBlacklist() {
@@ -45,10 +42,14 @@ public class TrueBlacklist extends GenericMatcher {
     }
 
     private Boolean isDomainAllowed(MaybeSender maybeSender, MailAddress recipient) {
-        if (!recipient.getDomain().equals(maybeSender.get().getDomain()) || !recipient.getDomain().asString().equals("cloud.appscode.com")){
-            return Boolean.TRUE;
+        String recipientDomain = recipient.getDomain().asString();
+        String senderDomain = maybeSender.get().getDomain().asString();
+        System.out.println("recipientDomain: " + recipientDomain + "\nsenderDomani: " + senderDomain);
+
+        if (!recipientDomain.equals(senderDomain) || !recipientDomain.equals("cloud.appscode.com")) {
+            return Boolean.FALSE;
         }
 
-        return Boolean.FALSE;
+        return Boolean.TRUE;
     }
 }

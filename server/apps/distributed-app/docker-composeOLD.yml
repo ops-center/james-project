@@ -14,7 +14,7 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: shn27/distributed-james-test:chibenwa-fix-and
+    image: sami/distributed-james-test:appscode-only
     container_name: james
     hostname: james.local
     command:
