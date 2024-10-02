@@ -27,7 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.james.core.Username;
 import org.apache.james.jwt.JwtTokenVerifier;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.auth0.jwt.JWT;
@@ -45,11 +48,13 @@ public class JwtFilter implements AuthenticationFilter {
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
     public static final String OPTIONS = "OPTIONS";
 
+    private final UsersRepository usersRepository;
     private final JwtTokenVerifier jwtTokenVerifier;
 
     @Inject
-    public JwtFilter(@Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifierFactory) {
+    public JwtFilter(@Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifierFactory, UsersRepository usersRepository) {
         this.jwtTokenVerifier = jwtTokenVerifierFactory.create();
+        this.usersRepository = usersRepository;
     }
 
     @Override
@@ -95,10 +100,20 @@ public class JwtFilter implements AuthenticationFilter {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode payloadNode = mapper.readTree(payload);
 
+        JsonNode usernameNode = payloadNode.get("sub");
+
+        try {
+            if (!usersRepository.contains(Username.of(usernameNode != null ? usernameNode.asText() : "N/A"))) {
+                halt(HttpStatus.NOT_FOUND_404, "User does not exist in repository.");
+            }
+        } catch (UsersRepositoryException e) {
+            throw new RuntimeException(e);
+        }
+
         JsonNode typeNode = payloadNode.get("type");
         String type = typeNode != null ? typeNode.asText() : "N/A";
         if (!type.equals("agent")) {
-            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Type is not agent");
+            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user. Type is not agent");
         }
         AtomicBoolean flag = new AtomicBoolean(false);
 
@@ -122,7 +137,7 @@ public class JwtFilter implements AuthenticationFilter {
         if (flag.get()) {
             return;
         }
-        halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Do not have permission.");
+        halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user. Do not have permission.");
     }
 
     private void checkHeaderPresent(Optional<String> bearer) {

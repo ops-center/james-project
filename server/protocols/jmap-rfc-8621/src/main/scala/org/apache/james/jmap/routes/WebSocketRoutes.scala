@@ -25,6 +25,7 @@ import java.util.stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
@@ -35,7 +36,7 @@ import org.apache.james.jmap.api.change.{EmailChangeRepository, MailboxChangeRep
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.change._
 import org.apache.james.jmap.core._
-import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.exceptions.{UnauthorizedException, UserNotFoundException}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
@@ -170,6 +171,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
   }
 
   private def handleHttpHandshakeError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
+    case e: UserNotFoundException => respondDetails(e.addHeaders(response), ProblemDetails(status = NOT_FOUND, detail = e.getMessage))
     case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
     case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
   }

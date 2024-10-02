@@ -1,3 +1,5 @@
+version: '3'
+
 services:
 
   james:
@@ -12,11 +14,11 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: ghcr.io/appscode/inbox-server:latest
-    container_name: james
-    hostname: james.local
+    image: sami7786/distributed-james-test:webadmin-invalidation
     volumes:
       - $PWD/jmap.properties:/root/conf/jmap.properties
+    container_name: james
+    hostname: james.local
     command:
       - --generate-keystore
     networks:
