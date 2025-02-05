@@ -26,7 +26,7 @@ import java.util.stream
 import java.util.stream.Stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
-import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
@@ -36,7 +36,7 @@ import org.apache.james.jmap.api.model.{UploadId, UploadMetaData}
 import org.apache.james.jmap.api.upload.UploadService
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails, SessionTranslator}
-import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.exceptions.{UnauthorizedException, UserNotFoundException}
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.{ResponseSerializer, UploadSerializer}
@@ -89,6 +89,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
           authenticator.authenticate(request))
         .flatMap(session => post(request, response, ContentType.of(contentType), session))
         .onErrorResume {
+          case e: UserNotFoundException => respondDetails(e.addHeaders(response), ProblemDetails(status = NOT_FOUND, detail = e.getMessage))
           case e: UnauthorizedException =>
             LOGGER.warn("Unauthorized", e)
             respondDetails(e.addHeaders(response),

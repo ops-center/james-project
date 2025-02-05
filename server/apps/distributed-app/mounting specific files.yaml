@@ -1,3 +1,5 @@
+version: '3'
+
 services:
 
   james:
@@ -12,11 +14,11 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: shn27/inbox-server:test-upload
-    container_name: james
-    hostname: james.local
+    image: sami7786/distributed-james-test:webadmin-invalidation
     volumes:
       - $PWD/jmap.properties:/root/conf/jmap.properties
+    container_name: james
+    hostname: james.local
     command:
       - --generate-keystore
     networks:
@@ -70,7 +72,7 @@ services:
       - james
 
   s3:
-    image: zenko/cloudserver
+    image: registry.scality.com/cloudserver/cloudserver:8.7.25
     container_name: s3.docker.test
     environment:
       - SCALITY_ACCESS_KEY_ID=accessKey1
