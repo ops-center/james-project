@@ -25,6 +25,7 @@ import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewM
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.RECEIVED_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.THREAD_ID;
 
 import java.time.ZonedDateTime;
 
@@ -33,12 +34,16 @@ import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.postgres.PostgresThreadIdGuessingAlgorithm;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule;
 import org.apache.james.util.streams.Limit;
 
 import com.google.common.base.Preconditions;
 
+import org.jooq.SQL;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -59,6 +64,18 @@ public class PostgresEmailQueryViewDAO {
                 .orderBy(SENT_AT.desc())
                 .limit(limit.getLimit().get())))
             .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+    }
+
+    public Flux<ThreadId> listThreadIDsSortedByReceivedAt(Limit limit) {
+        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
+
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectDistinct(THREAD_ID)
+                        .from(TABLE_NAME)
+                        .innerJoin(PostgresThreadModule.PostgresThreadTable.TABLE_NAME)
+                        .on(PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MESSAGE_ID.eq(PostgresThreadModule.PostgresThreadTable.MESSAGE_ID))
+                        .orderBy(RECEIVED_AT.desc())
+                        .limit(limit.getLimit().get())))
+                .map(record ->   ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(record.get(THREAD_ID))));
     }
 
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(PostgresMailboxId mailboxId, Limit limit) {

@@ -155,6 +155,14 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
 
     fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
   }
+//listThreadIDsSortedByReceivedAt
+//  private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
+//    val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
+//    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager
+//      .getEmailQueryView(mailboxSession.getUser).listMailboxContentSortedByReceivedAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
+//
+//    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
+//  }
 
   private def fromQueryViewEntries(mailboxId: MailboxId, queryViewEntries: SFlux[MessageId], mailboxSession: MailboxSession, position: Position, limitToUse: Limit, namespace: Namespace): SMono[Seq[MessageId]] =
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
@@ -229,5 +237,4 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       })
       .map(MailboxFilter.buildQuery(request, _, capabilities, session))
   }
-
 }
