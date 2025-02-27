@@ -21,7 +21,11 @@ package org.apache.james.webadmin.authentication;
 
 import static spark.Spark.halt;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -53,10 +57,73 @@ public class JwtFilter implements AuthenticationFilter {
 
             checkHeaderPresent(bearer);
             String login = retrieveUser(bearer);
-            checkIsAdmin(bearer);
+
+            Optional<String> userType = jwtTokenVerifier.verifyAndExtractClaim(bearer.get(), "type", String.class);
+            if (userType.isEmpty()) {
+                halt(HttpStatus.UNAUTHORIZED_401, "Missing user type in payload");
+            }
+
+            switch (userType.get()) {
+                case "agent":
+                    Optional<LinkedHashMap> permissionObject = jwtTokenVerifier.verifyAndExtractClaim(bearer.get(), "permissions", LinkedHashMap.class);
+
+                    if (permissionObject.isEmpty()) {
+                        halt(HttpStatus.UNAUTHORIZED_401, "Permissions claim not found.");
+                    }
+
+                    LinkedHashMap<String, List<String>> permissionClaims = new LinkedHashMap<>();
+                    permissionObject.get().forEach((key, value) -> {
+                        if (!(key instanceof String)) {
+                            throw new IllegalArgumentException("Invalid key type: " + key);
+                        }
+                        if (!(value instanceof List<?>)) {
+                            throw new IllegalArgumentException("Invalid value type for key '" + key + "': " + value);
+                        }
+                        List<?> valueList = (List<?>)value;
+                        for (Object item : valueList) {
+                            if (!(item instanceof String)) {
+                                throw new IllegalArgumentException("Invalid value type for List value for key '" + key + "' " + item);
+                            }
+                        }
+                        permissionClaims.put((String) key, (List<String>) value);
+                    });
+
+                    verifyAgentAuthorization(permissionClaims, request);
+                    break;
+                case "admin":
+                    break;
+                default:
+                    halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user. Unknown/Missing user type");
+            }
 
             request.attribute(LOGIN, login);
         }
+    }
+
+    private void verifyAgentAuthorization(LinkedHashMap<String, List<String>> permissionClaims, Request request) {
+        String requestMethod =  request.requestMethod();
+        String requestPath = "perm" + request.servletPath();
+
+        AtomicBoolean authorized = new AtomicBoolean(false);
+
+        permissionClaims.forEach((authorizedPath, permissions) -> {
+            if (!authorizedPathMatchesRequestPath(authorizedPath, requestPath)) {
+                return;
+            }
+
+            for (String permission: permissions) {
+                if (requestMethod.equals(permission)) {
+                    authorized.set(true);
+                    return;
+                }
+            }
+        });
+
+        if (authorized.get()) {
+            return;
+        }
+
+        halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user. Do not have permission.");
     }
 
     private void checkHeaderPresent(Optional<String> bearer) {
@@ -70,10 +137,12 @@ public class JwtFilter implements AuthenticationFilter {
             .orElseThrow(() -> halt(HttpStatus.UNAUTHORIZED_401, "Invalid Bearer header."));
     }
 
-    private void checkIsAdmin(Optional<String> bearer) {
-        if (!jwtTokenVerifier.hasAttribute("admin", true, bearer.get())) {
-            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.");
-        }
-    }
+    private boolean authorizedPathMatchesRequestPath(String authorizedPath, String requestPath) {
+        String[] authorizedPathArr = authorizedPath.split("\\.");
+        String[] requestPathArr = requestPath.split("/");
 
+        return authorizedPathArr.length == requestPathArr.length &&
+                IntStream.range(0, authorizedPathArr.length)
+                        .allMatch(i -> authorizedPathArr[i].equals("*") || authorizedPathArr[i].equals(requestPathArr[i]));
+    }
 }

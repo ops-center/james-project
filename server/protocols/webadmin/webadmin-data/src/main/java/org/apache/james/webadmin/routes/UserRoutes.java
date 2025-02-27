@@ -73,7 +73,7 @@ public class UserRoutes implements Routes {
     private static final String FORCE_PARAM = "force";
     private static final String VERIFY = "verify";
     private static final String AUTHORIZED_USERS = "authorizedUsers";
-
+    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
@@ -212,6 +212,14 @@ public class UserRoutes implements Routes {
 
     private HaltException upsertUser(Request request, Response response) throws Exception {
         Username username = extractUsername(request);
+        if (dummyUser.equals(username.asString())) {
+            LOGGER.info("Invalid username");
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Username supplied is invalid")
+                    .haltError();
+        }
         try {
             boolean isForced = request.queryParams().contains(FORCE_PARAM);
             if (isForced) {
