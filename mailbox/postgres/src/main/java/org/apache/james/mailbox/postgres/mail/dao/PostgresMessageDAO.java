@@ -21,6 +21,7 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
+import static org.apache.james.backends.postgres.utils.PostgresExecutor.EAGER_FETCH;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.ATTACHMENT_METADATA;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
@@ -41,26 +42,38 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.TEXTUAL_LINE_COUNT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.THREAD_ID;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.BYTE_TO_CONTENT_FUNCTION;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.HASH_BASE_SUBJECT;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule.PostgresThreadTable.USERNAME;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ThreadFactory;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.jooq.postgres.extensions.types.Hstore;
 
 import reactor.core.publisher.Flux;
@@ -157,4 +170,15 @@ public class PostgresMessageDAO {
             .map(record -> blobIdFactory.parse(record.get(BODY_BLOB_ID)));
     }
 
+    public Flux<ThreadId> findLatestThreadIds(PostgresMailboxId mailboxId, int limit ) {
+            return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
+                    .select(THREAD_ID, DSL.max(PostgresMessageModule.MessageToMailboxTable.INTERNAL_DATE).as("latest_date")) // Select thread_id and max internal_date
+                    .from(PostgresMessageModule.MessageToMailboxTable.TABLE_NAME)
+                    .where(MAILBOX_ID.eq(mailboxId.asUuid())) // Filter by mailboxId
+                    .groupBy(THREAD_ID) // Group by thread_id
+                    .orderBy(DSL.field("latest_date").desc()) // Order by latest_date in descending order
+                    .limit(limit) // Limit
+            ), EAGER_FETCH).map( record ->
+                ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(record.get(PostgresThreadModule.PostgresThreadTable.THREAD_ID))));
+    }
 }

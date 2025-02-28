@@ -22,14 +22,11 @@ package org.apache.james.mailbox.postgres.mail;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule.PostgresMailboxMemberTable.MAILBOX_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule.PostgresMailboxMemberTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxMemberModule.PostgresMailboxMemberTable.USER_NAME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.INTERNAL_DATE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.THREAD_ID;
 
 import java.util.List;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 
 import reactor.core.publisher.Flux;
@@ -48,14 +45,6 @@ public class PostgresMailboxMemberDAO {
                 .where(USER_NAME.eq(username.asString()))))
             .map(record -> PostgresMailboxId.of(record.get(MAILBOX_ID)));
     }
-
-//    public Flux<ThreadId> findLatestThreadIds( ) {
-//        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(THREAD_ID, INTERNAL_DATE)
-//                         .from(PostgresMessageModule.MessageToMailboxTable.TABLE_NAME)
-//                         .groupBy(THREAD_ID)
-//                         .orderBy(INTERNAL_DATE.desc())
-//                         .map(record -> PostgresMailboxId.of(record.get(MAILBOX_ID)));
-//    }
 
     public Mono<Void> insert(PostgresMailboxId mailboxId, List<Username> usernames) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, USER_NAME, MAILBOX_ID)
