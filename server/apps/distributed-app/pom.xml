@@ -454,20 +454,20 @@
                     <from>
                         <image>eclipse-temurin:21-jre-jammy</image>
                         <platforms>
-                          <platform>
-                            <architecture>amd64</architecture>
-                            <os>linux</os>
-                          </platform>
-                          <platform>
-                            <architecture>arm64</architecture>
-                            <os>linux</os>
-                          </platform>
+                            <platform>
+                                <architecture>amd64</architecture>
+                                <os>linux</os>
+                            </platform>
+                            <platform>
+                                <architecture>arm64</architecture>
+                                <os>linux</os>
+                            </platform>
                         </platforms>
                     </from>
                     <to>
-                        <image>ghcr.io/appscode/inbox-server</image> 
+                        <image>shn27/inbox-server</image>
                         <tags>
-                            <tag>distributed-latest</tag>
+                            <tag>distributed-latest-debug</tag> <!-- Add a debug tag for clarity -->
                         </tags>
                     </to>
                     <container>
@@ -489,6 +489,8 @@
                             <!-- GLOWROOT, if activated -->
                             <port>8000</port>
                             <!-- WEBADMIN -->
+                            <port>5005</port>
+                            <!-- Debug port -->
                         </ports>
                         <appRoot>/root</appRoot>
                         <jvmFlags>
@@ -497,6 +499,8 @@
                             <!-- Prevents Logjam (CVE-2015-4000) -->
                             <jvmFlag>-Djdk.tls.ephemeralDHKeySize=2048</jvmFlag>
                             <jvmFlag>-Dextra.props=/root/conf/jvm.properties</jvmFlag>
+                            <!-- Debug flags -->
+                            <jvmFlag>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</jvmFlag>
                         </jvmFlags>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <volumes>

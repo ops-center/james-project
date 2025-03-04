@@ -95,13 +95,16 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
   def sessionTranslator: SessionTranslator
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
+    println("I guess this is the first call of process")
     val either: Either[Exception, Publisher[InvocationWithContext]] = for {
       request <- getRequest(mailboxSession, invocation.invocation)
       translatedMailboxSession = sessionTranslator.delegateIfNeeded(mailboxSession, request.accountId)
     } yield {
+      println("may be pre req is used here", request)
       translatedMailboxSession.flatMapMany(translatedSession =>
         SFlux(doProcess(capabilities, invocation, translatedSession, request)))
     }
+
 
     def logClientSideError(e: Exception): Unit =
       MDCStructuredLogger.forLogger(Method.LOGGER)

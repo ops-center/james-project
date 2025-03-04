@@ -92,8 +92,12 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     }).map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailGetRequest] =
-    EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value).asEitherRequest
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailGetRequest] = {
+    println("Email/get called")
+    val res = EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value).asEitherRequest
+    println(s"Returning: $res") // Print the result before returning
+    res
+  }
 
   private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] = {
     val either: Either[Exception, SMono[Invocation]] = for {

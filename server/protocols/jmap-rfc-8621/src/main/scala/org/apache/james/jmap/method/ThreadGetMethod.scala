@@ -78,9 +78,14 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
         methodCallId = invocation.invocation.methodCallId))
       .map(InvocationWithContext(_, invocation.processingContext))
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, ThreadGetRequest] =
-    ThreadSerializer.deserialize(invocation.arguments.value).asEitherRequest
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, ThreadGetRequest] = {
+    println("Get request is called") // Print when method is called
+    val result = ThreadSerializer.deserialize(invocation.arguments.value).asEitherRequest
       .flatMap(request => request.validate(configuration).map(_ => request))
+
+    println(s"Returning: $result") // Print the result before returning
+    result
+  }
 
   private def getThreadResponse(threadGetRequest: ThreadGetRequest,
                                 mailboxSession: MailboxSession): SFlux[ThreadGetResult] =

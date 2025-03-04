@@ -19,13 +19,12 @@
 package org.apache.james.jmap.method
 
 import java.time.ZonedDateTime
-
 import cats.implicits._
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import jakarta.mail.Flags.Flag.DELETED
 import org.apache.james.jmap.JMAPConfiguration
-import org.apache.james.jmap.api.projections.{EmailQueryView, EmailQueryViewManager}
+import org.apache.james.jmap.api.projections.{EmailQueryView, EmailQueryViewManager, ThreadQueryViewManager}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.Limit.Limit
@@ -46,17 +45,19 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 
-class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
+class ThreadQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
                                   val sessionTranslator: SessionTranslator,
                                   val configuration: JMAPConfiguration,
-                                  val emailQueryViewManager: EmailQueryViewManager) extends MethodRequiringAccountId[EmailQueryRequest] {
-  override val methodName: MethodName = MethodName("Email/query")
+                                  val threadQueryViewManager: ThreadQueryViewManager
+                                  ) extends MethodRequiringAccountId[EmailQueryRequest] {
+  override val methodName: MethodName = MethodName("Thread/query")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailQueryRequest): SMono[InvocationWithContext] = {
+    println("do process called in thread query")
     processRequest(mailboxSession, invocation.invocation, request, capabilities)
       .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }
@@ -65,22 +66,26 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                              invocation: Invocation,
                              request: EmailQueryRequest,
                              capabilities: Set[CapabilityIdentifier]): SMono[Invocation] = {
+    println("Process request called in thread query")
     def validation: Either[Throwable, SMono[Invocation]] = for {
-        searchQuery <- searchQueryFromRequest(request, capabilities, mailboxSession)
-        limit <- Limit.validateRequestLimit(request.limit)
-        position <- Position.validateRequestPosition(request.position)
-      } yield {
-        executeQuery(mailboxSession, request, searchQuery, position, limit)
-          .map(response => Invocation(
-            methodName = methodName,
-            arguments = Arguments(serializer.serialize(response)),
-            methodCallId = invocation.methodCallId))
-      }
+      searchQuery <- searchQueryFromRequest(request, capabilities, mailboxSession)
+      limit <- Limit.validateRequestLimit(request.limit)
+      position <- Position.validateRequestPosition(request.position)
+    } yield {
+      println("processRequest er yield er moddhe")
+      val ans = executeQuery(mailboxSession, request, searchQuery, position, limit)
+        .map(response => Invocation(
+          methodName = methodName,
+          arguments = Arguments(serializer.serialize(response)),
+          methodCallId = invocation.methodCallId))
+      println("yield er executeReq er ans ", ans)
+      ans
+    }
     validation.fold(SMono.error, res => res)
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailQueryRequest] = {
-    println("Email/query called")
+    println("Thread/query getRequest called")
     val result = serializer.deserializeEmailQueryRequest(invocation.arguments.value)
       .asEitherRequest
       .flatMap(validateRequestParameters)
@@ -96,70 +101,67 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     }
 
   private def executeQuery(session: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): SMono[EmailQueryResponse] = {
+    println("execute Query Called in Thread Query")
+    println("request:", request)
+    println("searchQuery:", searchQuery)
+    println("position:", position)
+    println("limit:", limit)
+
     val ids: SMono[Seq[MessageId]] = request match {
       case request: EmailQueryRequest if matchesInMailboxSortedBySentAt(request) =>
         queryViewForListingSortedBySentAt(session, position, limit, request, searchQuery.getNamespace)
-      case request: EmailQueryRequest if matchesInMailboxAfterSortedBySentAt(request) =>
-        queryViewForContentAfterSortedBySentAt(session, position, limit, request, searchQuery.getNamespace)
-      case request: EmailQueryRequest if matchesInMailboxSortedByReceivedAt(request) =>
-        queryViewForListingSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
-      case request: EmailQueryRequest if matchesInMailboxAfterSortedByReceivedAt(request) =>
-        queryViewForContentAfterSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
-      case request: EmailQueryRequest if matchesInMailboxBeforeSortedByReceivedAt(request) =>
-        queryViewForContentBeforeSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
-      case _ => executeQueryAgainstSearchIndex(session, searchQuery, position, limit)
     }
 
     ids.map(ids => toResponse(request, position, limit, ids))
   }
 
-  private def queryViewForContentAfterSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
-    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
-    val mailboxId: MailboxId = condition.inMailbox.get
-    val after: ZonedDateTime = condition.after.get.asUTC
-
-    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
-      .listMailboxContentSinceAfterSortedBySentAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
-
-    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
-  }
-
-  private def queryViewForContentAfterSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
-    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
-    val mailboxId: MailboxId = condition.inMailbox.get
-    val after: ZonedDateTime = condition.after.get.asUTC
-    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
-      .listMailboxContentSinceAfterSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
-
-    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
-  }
-
-  private def queryViewForContentBeforeSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
-    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
-    val mailboxId: MailboxId = condition.inMailbox.get
-    val before: ZonedDateTime = condition.before.get.asUTC
-    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
-      .listMailboxContentBeforeSortedByReceivedAt(mailboxId, before, JavaLimit.from(limitToUse.value + position.value)))
-
-    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
-  }
+//  private def queryViewForContentAfterSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
+//    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
+//    val mailboxId: MailboxId = condition.inMailbox.get
+//    val after: ZonedDateTime = condition.after.get.asUTC
+//
+//    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
+//      .listMailboxContentSinceAfterSortedBySentAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
+//
+//    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
+//  }
+//
+//  private def queryViewForContentAfterSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
+//    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
+//    val mailboxId: MailboxId = condition.inMailbox.get
+//    val after: ZonedDateTime = condition.after.get.asUTC
+//    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
+//      .listMailboxContentSinceAfterSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
+//
+//    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
+//  }
+//
+//  private def queryViewForContentBeforeSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
+//    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
+//    val mailboxId: MailboxId = condition.inMailbox.get
+//    val before: ZonedDateTime = condition.before.get.asUTC
+//    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
+//      .listMailboxContentBeforeSortedByReceivedAt(mailboxId, before, JavaLimit.from(limitToUse.value + position.value)))
+//
+//    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
+//  }
+//
+//  private def latestThreadViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
+//    val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
+//    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
+//      .listMailboxContentSortedBySentAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
+//
+//    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
+//  }
 
   private def queryViewForListingSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
-    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser)
+    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(threadQueryViewManager.getEmailQueryView(mailboxSession.getUser)
       .listMailboxContentSortedBySentAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
 
     fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
   }
 
-  private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
-    val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
-    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager
-      .getEmailQueryView(mailboxSession.getUser).listMailboxContentSortedByReceivedAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
-
-    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
-  }
-//listThreadIDsSortedByReceivedAt
 //  private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
 //    val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
 //    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryViewManager
@@ -172,9 +174,9 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
       .flatMap(_ => queryViewEntries
-          .drop(position.value)
-          .take(limitToUse.value)
-          .collectSeq())
+        .drop(position.value)
+        .take(limitToUse.value)
+        .collectSeq())
       .switchIfEmpty(SMono.just[Seq[MessageId]](Seq()))
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
@@ -241,4 +243,5 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       })
       .map(MailboxFilter.buildQuery(request, _, capabilities, session))
   }
+
 }
