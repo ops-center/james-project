@@ -30,6 +30,8 @@ import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
+import org.apache.james.jmap.api.projections.ThreadQueryView;
+import org.apache.james.jmap.api.projections.ThreadQueryViewManager;
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjection;
@@ -37,6 +39,8 @@ import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDAO;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryView;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewManager;
 import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjection;
+import org.apache.james.jmap.postgres.projections.PostgresThreadQueryView;
+import org.apache.james.jmap.postgres.projections.PostgresThreadQueryViewManager;
 import org.apache.james.jmap.postgres.upload.PostgresUploadRepository;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -69,6 +73,12 @@ public class PostgresDataJmapModule extends AbstractModule {
         bind(EmailQueryView.class).to(PostgresEmailQueryView.class);
         bind(PostgresEmailQueryView.class).in(Scopes.SINGLETON);
         bind(EmailQueryViewManager.class).to(PostgresEmailQueryViewManager.class);
+
+
+        bind(PostgresThreadQueryView.class).in(Scopes.SINGLETON);
+        bind(ThreadQueryView.class).to(PostgresThreadQueryView.class);
+        bind(PostgresThreadQueryView.class).in(Scopes.SINGLETON);
+        bind(ThreadQueryViewManager.class).to(PostgresThreadQueryViewManager.class);
 
         bind(MessageFastViewProjectionHealthCheck.class).in(Scopes.SINGLETON);
         Multibinder.newSetBinder(binder(), HealthCheck.class)
