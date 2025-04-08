@@ -195,6 +195,7 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Mono<MailboxCounters> getMailboxCountersReactive(Mailbox mailbox) {
+        System.out.println("===========dadu getMailboxCountersReactive");
         return mailboxMessageDAO.countTotalAndUnseenMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId())
             .map(pair -> MailboxCounters.builder()
                 .mailboxId(mailbox.getMailboxId())

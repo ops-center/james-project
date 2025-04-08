@@ -788,6 +788,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSearchFetchType fetchType, MailboxSession session) {
+        System.out.println("=================kanai tmi khel khelap Search");
         Mono<List<Mailbox>> mailboxesMono = searchMailboxes(expression, session, Right.Lookup).collectList();
 
         return mailboxesMono
@@ -799,13 +800,16 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     private Function<Flux<Mailbox>, Flux<MailboxMetaData>> metadataTransformation(MailboxSearchFetchType fetchType, MailboxSession session, List<Mailbox> mailboxes) {
+        System.out.println("o amar bondhu go============== metadataTransformation ");
         if (fetchType == MailboxSearchFetchType.Counters) {
+            System.out.println("================WITH counters");
             return withCounters(session, mailboxes);
         }
         return withoutCounters(session, mailboxes);
     }
 
     private Function<Flux<Mailbox>, Flux<MailboxMetaData>> withCounters(MailboxSession session, List<Mailbox> mailboxes) {
+        System.out.println("monjil valo bro===========");
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
         Map<MailboxPath, Boolean> parentMap = parentMap(mailboxes, session);
         int concurrency = 4;

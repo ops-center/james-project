@@ -259,6 +259,7 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Mono<Pair<Integer, Integer>> countTotalAndUnseenMessagesByMailboxId(PostgresMailboxId mailboxId) {
+        System.out.println("ahare ahare kothai pabo count re====================");
         Name totalCount = DSL.name("total_count");
         Name unSeenCount = DSL.name("unseen_count");
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(

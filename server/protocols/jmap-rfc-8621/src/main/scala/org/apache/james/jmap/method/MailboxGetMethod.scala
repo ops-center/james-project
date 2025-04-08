@@ -75,6 +75,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxGetRequest): SMono[InvocationWithContext] = {
+    println("=========================Brother Mailbox/get")
     val requestedProperties: Properties = request.properties.getOrElse(Mailbox.allProperties)
     (requestedProperties -- Mailbox.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, request, mailboxSession)
@@ -107,7 +108,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
       .flatMap(request => request.validate(configuration).map(_ => request))
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],
                            mailboxGetRequest: MailboxGetRequest,
-                           mailboxSession: MailboxSession): SFlux[MailboxGetResults] =
+                           mailboxSession: MailboxSession): SFlux[MailboxGetResults] = {
+    println("========================ops getMailboxes")
     mailboxGetRequest.ids match {
       case None => provisioner.createMailboxesIfNeeded(mailboxSession)
         .thenMany(getAllMailboxes(capabilities, mailboxSession))
@@ -126,6 +128,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                 maxConcurrency = 5)
           }
     }
+  }
 
   private def retrieveSubscriptions(mailboxSession: MailboxSession): SMono[Subscriptions] =
     SFlux(subscriptionManager.subscriptionsReactive(mailboxSession))
@@ -155,7 +158,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     }
   }
 
-  private def getAllMailboxes(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SFlux[Mailbox] =
+  private def getAllMailboxes(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SFlux[Mailbox] = {
+    println("===========================getAllMailboxes")
     SMono.zip(array => (array(0).asInstanceOf[Map[MailboxPath, MailboxMetaData]],
           array(1).asInstanceOf[QuotaLoaderWithPreloadedDefault],
           array(2).asInstanceOf[Subscriptions]),
@@ -170,14 +174,18 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
             allMailboxesMetadata = mailboxes,
             quotaLoader = quotaLoader))
       }
+  }
 
-  private def getAllMailboxesMetaData(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[Map[MailboxPath, MailboxMetaData]] =
-      SFlux.fromPublisher(mailboxManager.search(
+  private def getAllMailboxesMetaData(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[Map[MailboxPath, MailboxMetaData]] = {
+    println("==================getAllMailboxesMetaData")
+    SFlux.fromPublisher(mailboxManager.search(
           mailboxQuery(capabilities, mailboxSession),
           mailboxSession))
         .collectMap(_.getPath)
+  }
 
-  private def mailboxQuery(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession) =
+  private def mailboxQuery(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession) = {
+    println("================kaka mailboxQuery")
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
       MailboxQuery.builder
         .matchesAllMailboxNames
@@ -188,4 +196,5 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
         .user(mailboxSession.getUser)
         .build
     }
+  }
 }
