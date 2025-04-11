@@ -22,6 +22,7 @@ package org.apache.james.user.api;
 import static org.apache.james.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -91,6 +92,16 @@ public interface UsersRepository {
      *             if error
      */
     void removeUser(Username name) throws UsersRepositoryException;
+
+    /**
+     * Removes a list of users from the repository
+     *
+     * @param names
+     *            the users to remove from the repository
+     * @throws UsersRepositoryException
+     *             if error
+     */
+    void removeUsers(List<Username> names) throws UsersRepositoryException;
 
     /**
      * Returns whether or not this user is in the repository
