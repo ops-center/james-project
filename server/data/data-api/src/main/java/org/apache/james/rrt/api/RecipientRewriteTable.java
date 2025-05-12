@@ -20,6 +20,7 @@ package org.apache.james.rrt.api;
 
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -60,6 +61,10 @@ public interface RecipientRewriteTable {
     void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
 
     void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
+
+    default void removeMappings(List<MappingSource> targets, Mapping.Type type) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("'removeMappings' only implemented for PostgresRecipientRewriteTableDAO");
+    }
 
     void addRegexMapping(MappingSource source, String regex) throws RecipientRewriteTableException;
 
