@@ -36,6 +36,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.postgres.extensions.types.Hstore;
 
+
 public interface PostgresMessageDataDefinition {
 
     Field<UUID> MESSAGE_ID = DSL.field("message_id", SQLDataType.UUID.notNull());
@@ -173,7 +174,9 @@ public interface PostgresMessageDataDefinition {
         PostgresIndex MAILBOX_ID_IS_DELETE_MESSAGE_UID_INDEX = PostgresIndex.name("mailbox_id_is_delete_mail_uid_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, MAILBOX_ID, IS_DELETED, MESSAGE_UID.asc()));
-
+        PostgresIndex MAILBOX_THREAD_DATE_INDEX = PostgresIndex.name("mailbox_thread_internal_date_index")
+                .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                        .on(TABLE_NAME, MAILBOX_ID, THREAD_ID, INTERNAL_DATE.desc()));
     }
 
     PostgresDataDefinition MODULE = PostgresDataDefinition.builder()
@@ -184,6 +187,7 @@ public interface PostgresMessageDataDefinition {
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_SEEN_MESSAGE_UID_INDEX)
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_RECENT_MESSAGE_UID_INDEX)
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_DELETE_MESSAGE_UID_INDEX)
+        .addIndex(MessageToMailboxTable.MAILBOX_THREAD_DATE_INDEX)
         .build();
 
 }

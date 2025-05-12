@@ -19,6 +19,7 @@
 
 package org.apache.james.rrt.postgres;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -54,6 +55,11 @@ public class PostgresRecipientRewriteTable extends AbstractRecipientRewriteTable
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) {
         postgresRecipientRewriteTableDAO.removeMapping(source, mapping).block();
+    }
+
+    @Override
+    public void removeMappings(List<MappingSource> targets, Mapping.Type type) {
+        postgresRecipientRewriteTableDAO.removeMappings(targets, type).block();
     }
 
     @Override

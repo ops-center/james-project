@@ -64,6 +64,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -123,7 +125,7 @@ class GroupsRoutesTest {
                 new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));
             memoryRecipientRewriteTable.setUserEntityValidator(validator);
             memoryRecipientRewriteTable.setUsersRepository(usersRepository);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(mappingSourceModule)),
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(mappingSourceModule), new ObjectMapper()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -504,7 +506,7 @@ class GroupsRoutesTest {
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             memoryRecipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
             memoryRecipientRewriteTable.setUsersRepository(userRepository);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer()),
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, new JsonTransformer(), new ObjectMapper()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
