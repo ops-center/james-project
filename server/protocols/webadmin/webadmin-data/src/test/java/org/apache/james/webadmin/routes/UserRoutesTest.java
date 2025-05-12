@@ -79,6 +79,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import io.restassured.RestAssured;
@@ -173,7 +174,8 @@ class UserRoutesTest {
         private WebAdminServer startServer(UsersRepository usersRepository) {
             WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer(),
                     delegationStore,
-                    ImmutableMap.of()))
+                    ImmutableMap.of(),
+                    new ObjectMapper()))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
