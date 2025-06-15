@@ -152,7 +152,7 @@ public class JwtFilter implements AuthenticationFilter {
 
     private String retrieveUser(Optional<String> bearer) {
         return jwtTokenVerifier.verifyAndExtractLogin(bearer.get())
-            .orElseThrow(() -> halt(HttpStatus.UNAUTHORIZED_401, "Invalid Bearer header."));
+            .orElseThrow(() -> halt(HttpStatus.UNAUTHORIZED_401, "Invalid token."));
     }
 
     private boolean authorizedPathMatchesRequestPath(String authorizedPath, String requestPath) {
