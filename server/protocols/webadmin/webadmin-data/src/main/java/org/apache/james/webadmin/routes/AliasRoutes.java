@@ -23,6 +23,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
 import java.util.Comparator;
+import java.util.List;
 
 import jakarta.inject.Inject;
 
@@ -40,12 +41,16 @@ import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AliasSourcesResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -69,13 +74,15 @@ public class AliasRoutes implements Routes {
     private final DomainList domainList;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
+    private final ObjectMapper objectMapper;
 
     @Inject
     @VisibleForTesting
-    AliasRoutes(RecipientRewriteTable recipientRewriteTable, DomainList domainList, JsonTransformer jsonTransformer) {
+    AliasRoutes(RecipientRewriteTable recipientRewriteTable, DomainList domainList, JsonTransformer jsonTransformer, ObjectMapper objectmapper) {
         this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
+        this.objectMapper = objectmapper;
     }
 
     @Override
@@ -86,9 +93,33 @@ public class AliasRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.get(ROOT_PATH, this::listAddressesWithAliases, jsonTransformer);
+        service.delete(ROOT_PATH, this::deleteAllAliases, jsonTransformer);
         service.get(ALIAS_ADDRESS_PATH, this::listAliasesOfAddress, jsonTransformer);
         service.put(USER_IN_ALIAS_SOURCES_ADDRESSES_PATH, this::addAlias);
         service.delete(USER_IN_ALIAS_SOURCES_ADDRESSES_PATH, this::deleteAlias);
+    }
+
+    // Delete all aliases of the users given in the payload as a json list.
+    // e.g; ["user@mydomain", "user2@mydomain", ...]
+    public String deleteAllAliases(Request request, Response response) throws JsonProcessingException {
+        String jsonString = request.body();
+        List<String> users = objectMapper.readValue(jsonString, new TypeReference<>(){});
+        if (users == null || users.isEmpty()) {
+            response.status(HttpStatus.NO_CONTENT_204);
+            return Constants.EMPTY_BODY;
+        }
+
+        try {
+            recipientRewriteTable.removeMappings(users.stream()
+                    .map(u -> MappingSource.fromUser(Username.of(u))).toList(),
+                    Mapping.Type.Alias);
+        } catch (RecipientRewriteTableException e) {
+            response.status(HttpStatus.BAD_REQUEST_400);
+            return e.getMessage();
+        }
+
+        response.status(HttpStatus.OK_200);
+        return Constants.EMPTY_BODY;
     }
 
     public ImmutableSet<String> listAddressesWithAliases(Request request, Response response) throws RecipientRewriteTableException {

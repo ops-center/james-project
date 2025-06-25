@@ -25,6 +25,8 @@ import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDef
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.TARGET_ADDRESS;
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDataDefinition.PostgresRecipientRewriteTableTable.USERNAME;
 
+import java.util.List;
+
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -63,6 +65,15 @@ public class PostgresRecipientRewriteTableDAO {
             .where(USERNAME.eq(source.getFixedUser()))
             .and(DOMAIN_NAME.eq(source.getFixedDomain()))
             .and(TARGET_ADDRESS.eq(mapping.asString()))));
+    }
+
+    public Mono<Void> removeMappings(List<MappingSource> targets, Mapping.Type type) {
+        return postgresExecutor.executeVoid(dsl -> Mono.from(
+                dsl.deleteFrom(TABLE_NAME)
+                        .where(TARGET_ADDRESS.in(targets.stream()
+                                .map(MappingSource::asString)
+                                .map(s -> type.asPrefix() + s)
+                                .toList()))));
     }
 
     public Mono<Mappings> getMappings(MappingSource source) {
