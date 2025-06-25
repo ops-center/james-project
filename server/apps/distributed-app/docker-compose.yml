@@ -16,7 +16,7 @@ services:
       - JVM_OPTS=-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=1
     networks: [james]
   tika:
-    image: apache/tika:2.9.2.1
+    image: apache/tika:3.2.0.0
     networks: [james]
   rabbitmq:
     image: rabbitmq:4.1.1-management
