@@ -40,6 +40,7 @@ import org.apache.james.server.task.json.TaskExtensionModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.ExtensionConfiguration;
 import org.apache.james.utils.GuiceLoader;
@@ -185,11 +186,11 @@ public class WebAdminServerModule extends AbstractModule {
     @Singleton
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
                                                              WebAdminConfiguration webAdminConfiguration,
-                                                             @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier) throws Exception {
+                                                             @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier, UsersRepository usersRepository) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
-                return new JwtFilter(jwtTokenVerifier);
+                return new JwtFilter(jwtTokenVerifier, usersRepository);
             }
             return webAdminConfiguration.getPassword()
                 .<AuthenticationFilter>map(PasswordFilter::new)
