@@ -4,7 +4,7 @@ services:
     depends_on:
       postgres:
         condition: service_started
-    image: sami7786/inbox-server:postgres-squash
+    image: ghcr.io/appscode/inbox-server:postgres-latest
     container_name: james
     hostname: james.local
     command: [--generate-keystore]
