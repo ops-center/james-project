@@ -22,6 +22,7 @@ package org.apache.james.user.lib;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -235,6 +236,14 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     public void removeUser(Username name) throws UsersRepositoryException {
         assertDomainPartValid(name);
         usersDAO.removeUser(name);
+    }
+
+    @Override
+    public void removeUsers(List<Username> names) throws UsersRepositoryException {
+        for (Username name: names) {
+            assertDomainPartValid(name);
+        }
+        usersDAO.removeUsers(names);
     }
 
     @Override
