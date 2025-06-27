@@ -108,7 +108,7 @@ public class GroupsRoutes implements Routes {
         service.get(GROUP_MEMBER_ASSOCIATIONS, this::checkGroupMemberAssociations);
         service.get(GROUP_MEMBER_IS_EXIST, this::isMemberExist);
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
-        service.delete(ROOT_PATH, this::deleteGroups, jsonTransformer);
+        // service.delete(ROOT_PATH, this::deleteGroups, jsonTransformer);
         service.get(GROUP_MULTIPLE_PATH_IS_EXIST, this::isExist);
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
         service.put(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
@@ -311,7 +311,16 @@ public class GroupsRoutes implements Routes {
 
     public HaltException removeMultipleGroup(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
         String jsonString = request.body();
+
+        String normalized = jsonString == null ? "" : jsonString.trim();
+        if (normalized.isEmpty() || normalized.equals("{}") || normalized.equals("[]")) {
+            return deleteGroups(request, response);
+        }
+
         List<String> groups = objectMapper.readValue(jsonString, new TypeReference<List<String>>() {});
+        if (groups.isEmpty()) {
+            return deleteGroups(request, response);
+        }
 
         //checking is this group correct or not. If not through an exception
         for (int i = 0; i < groups.size(); i++) {
