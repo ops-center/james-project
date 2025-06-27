@@ -356,9 +356,9 @@
                         </platforms>
                     </from>
                     <to>
-                        <image>sami7786/inbox-server</image>
+                        <image>ghcr.io/appscode/inbox-server</image>
                         <tags>
-                            <tag>postgres-squash</tag>
+                            <tag>postgres-latest</tag>
                         </tags>
                     </to>
                     <container>

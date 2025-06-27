@@ -465,9 +465,9 @@
                         </platforms>
                     </from>
                     <to>
-                        <image>sami7786/inbox-server</image>
+                        <image>ghcr.io/appscode/inbox-server</image>
                         <tags>
-                            <tag>distributed-squash</tag>
+                            <tag>distributed-latest</tag>
                         </tags>
                     </to>
                     <container>
