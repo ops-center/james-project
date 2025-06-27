@@ -60,6 +60,7 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.authentication.PasswordFilter;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.mdc.RequestLogger;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -155,6 +156,7 @@ public class WebAdminServerModule extends AbstractModule {
                     Optional.ofNullable(configurationFile.getString("jwt.publickeypem.url", null))))
                 .maxThreadCount(Optional.ofNullable(configurationFile.getInteger("maxThreadCount", null)))
                 .minThreadCount(Optional.ofNullable(configurationFile.getInteger("minThreadCount", null)))
+                .password(Optional.ofNullable(configurationFile.getString("password", null)))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
@@ -183,13 +185,16 @@ public class WebAdminServerModule extends AbstractModule {
     @Provides
     @Singleton
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
-                                                             @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier, UsersRepository usersRepository) throws Exception {
+        WebAdminConfiguration webAdminConfiguration,
+        @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier, UsersRepository usersRepository) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {
                 return new JwtFilter(jwtTokenVerifier, usersRepository);
             }
-            return new NoAuthenticationFilter();
+            return webAdminConfiguration.getPassword()
+                .<AuthenticationFilter>map(PasswordFilter::new)
+                .orElse(new NoAuthenticationFilter());
         } catch (FileNotFoundException e) {
             return new NoAuthenticationFilter();
         }
