@@ -4,7 +4,7 @@ services:
     depends_on:
       postgres:
         condition: service_started
-    image: sami7786/inbox-server:postgres-squash
+    image: ghcr.io/appscode/inbox-server:postgres-latest
     container_name: james
     hostname: james.local
     command: [--generate-keystore]
@@ -17,11 +17,11 @@ services:
       - 587:587
       - 993:993
       - 8000:8000
-    volumes:
+    # volumes:
       # - ./sample-configuration-single/search.properties:/root/conf/search.properties
       # - ./sample-configuration/blob.properties:/root/conf/blob.properties
       # - ./sample-configuration/jmap.properties:/root/conf/jmap.properties
-      - ./sample-configuration/jwt_publickey:/root/conf/rs256-4096-public.pem
+      # - ./sample-configuration/jwt_publickey:/root/conf/rs256-4096-public.pem
     networks: [james]
   postgres:
     image: postgres:16.3
