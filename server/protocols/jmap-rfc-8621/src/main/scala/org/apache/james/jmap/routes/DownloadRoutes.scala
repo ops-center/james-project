@@ -40,7 +40,7 @@ import org.apache.james.jmap.api.model.{Upload, UploadId, UploadNotFoundExceptio
 import org.apache.james.jmap.api.upload.UploadService
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, ProblemDetails, SessionTranslator}
-import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.exceptions.{UnauthorizedException, UserNotFoundException}
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
@@ -261,7 +261,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private val blobIdParam: String = "blobId"
   private val nameParam: String = "name"
   private val contentTypeParam: String = "type"
-  private val downloadUri = s"/download/{$accountIdParam}/{$blobIdParam}"
+  private val downloadUri = s"/jmap/download/{$accountIdParam}/{$blobIdParam}"
   private val pendingDownloadMetric: Metric = metricFactory.generate("jmap_pending_downloads")
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -280,6 +280,9 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .onErrorResume {
         case _: ForbiddenException | _: AccountNotFoundException =>
           respondDetails(response, ProblemDetails(status = FORBIDDEN, detail = "You cannot download in others accounts"))
+        case e: UserNotFoundException =>
+          LOGGER.warn("User not found", e)
+          respondDetails(e.addHeaders(response), ProblemDetails(status = NOT_FOUND, detail = e.getMessage))
         case e: UnauthorizedException =>
           LOGGER.warn("Unauthorized", e)
           respondDetails(e.addHeaders(response), ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage))
