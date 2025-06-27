@@ -311,8 +311,13 @@ public class GroupsRoutes implements Routes {
 
     public HaltException removeMultipleGroup(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
         String jsonString = request.body();
-        List<String> groups = objectMapper.readValue(jsonString, new TypeReference<List<String>>() {});
 
+        String normalized = jsonString == null ? "" : jsonString.trim();
+        if (normalized.isEmpty() || normalized.equals("{}") || normalized.equals("[]")) {
+            return deleteGroups(request, response);
+        }
+
+        List<String> groups = objectMapper.readValue(jsonString, new TypeReference<List<String>>() {});
         if (groups.isEmpty()) {
             return deleteGroups(request, response);
         }
