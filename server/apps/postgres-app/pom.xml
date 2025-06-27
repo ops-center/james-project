@@ -358,7 +358,7 @@
                     <to>
                         <image>ghcr.io/appscode/inbox-server</image>
                         <tags>
-                            <tag>postgres-latest</tag>
+                            <tag>postgres-squash</tag>
                         </tags>
                     </to>
                     <container>

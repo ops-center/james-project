@@ -61,7 +61,7 @@ public class JwtFilter implements AuthenticationFilter {
                 .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
 
             checkHeaderPresent(bearer);
-            String login = retrieveUser(bearer);
+            String login = retrieveUser(bearer); // includes standard token verification: format, signature, expiration, etc.
 
             Optional<String> userType = jwtTokenVerifier.verifyAndExtractClaim(bearer.get(), "type", String.class);
             if (userType.isEmpty()) {

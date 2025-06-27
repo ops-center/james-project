@@ -185,8 +185,8 @@ public class WebAdminServerModule extends AbstractModule {
     @Provides
     @Singleton
     public AuthenticationFilter providesAuthenticationFilter(PropertiesProvider propertiesProvider,
-        WebAdminConfiguration webAdminConfiguration,
-        @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier, UsersRepository usersRepository) throws Exception {
+                                                             WebAdminConfiguration webAdminConfiguration,
+                                                             @Named("webadmin") JwtTokenVerifier.Factory jwtTokenVerifier, UsersRepository usersRepository) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
             if (configurationFile.getBoolean("jwt.enabled", DEFAULT_JWT_DISABLED)) {

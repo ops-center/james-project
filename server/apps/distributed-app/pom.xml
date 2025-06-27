@@ -467,7 +467,7 @@
                     <to>
                         <image>ghcr.io/appscode/inbox-server</image>
                         <tags>
-                            <tag>distributed-latest</tag>
+                            <tag>distributed-squash</tag>
                         </tags>
                     </to>
                     <container>

@@ -15,7 +15,6 @@ mailbox/store/src/test/resources/eml/*.eml
 
 bin/
 tmp/
-target/
 ./server/container/guice/common/src/test/resources/eml
 .m2
 *.eml
