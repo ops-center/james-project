@@ -103,6 +103,13 @@ public class AliasRoutes implements Routes {
     // e.g; ["user@mydomain", "user2@mydomain", ...]
     public String deleteAllAliases(Request request, Response response) throws JsonProcessingException {
         String jsonString = request.body();
+
+        String normalized = jsonString == null ? "" : jsonString.trim();
+        if (normalized.isEmpty() || normalized.equals("{}") || normalized.equals("[]")) {
+            response.status(HttpStatus.NO_CONTENT_204);
+            return Constants.EMPTY_BODY;
+        }
+
         List<String> users = objectMapper.readValue(jsonString, new TypeReference<>(){});
         if (users == null || users.isEmpty()) {
             response.status(HttpStatus.NO_CONTENT_204);
