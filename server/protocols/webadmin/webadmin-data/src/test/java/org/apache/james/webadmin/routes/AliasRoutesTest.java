@@ -62,6 +62,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -132,7 +134,7 @@ class AliasRoutesTest {
             memoryRecipientRewriteTable.setUserEntityValidator(validator);
             memoryRecipientRewriteTable.setUsersRepository(usersRepository);
 
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, domainList, new JsonTransformer(module)),
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, domainList, new JsonTransformer(module), new ObjectMapper()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -477,7 +479,7 @@ class AliasRoutesTest {
             memoryRecipientRewriteTable.setUsersRepository(userRepository);
             memoryRecipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, domainList, new JsonTransformer()),
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, domainList, new JsonTransformer(), new ObjectMapper()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 

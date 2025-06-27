@@ -31,7 +31,9 @@ import static org.apache.james.user.postgres.PostgresUserDataDefinition.Postgres
 import static org.apache.james.user.postgres.PostgresUserDataDefinition.PostgresUserTable.USERNAME_PRIMARY_KEY;
 import static org.jooq.impl.DSL.count;
 
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
@@ -112,6 +114,25 @@ public class PostgresUsersDAO implements UsersDAO {
 
         if (!executed) {
             throw new UsersRepositoryException("Unable to update user");
+        }
+    }
+
+    @Override
+    public void removeUsers(List<Username> names) throws UsersRepositoryException {
+        if (names == null || names.isEmpty()) {
+            return;
+        }
+        List<String> deletedUsers = postgresExecutor.executeRows(dslContext ->
+                        Flux.from(dslContext.deleteFrom(TABLE_NAME)
+                        .where(USERNAME.in(names.stream().map(Username::asString).toList()))
+                        .returning(USERNAME)))
+                .map(record -> record.get(USERNAME))
+                .collectList()
+                .blockOptional()
+                .orElse(Collections.emptyList());
+
+        if (deletedUsers.size() < names.size()) {
+            throw new UsersRepositoryException("Some users may not have been deleted");
         }
     }
 

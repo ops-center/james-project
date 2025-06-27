@@ -4,10 +4,6 @@
 
  * Java 21 SDK
 
-Firstly, create your own user network on Docker for the James environment:
-
-    $ docker network create --driver bridge james
-
 Third party compulsory dependencies:
 
  * Cassandra 4.0
@@ -22,15 +18,126 @@ $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.
 $ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:4.1.1-management
 $ docker run -d --network james -p 8000:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:8cbe2c066b3505b26d339dc67315d1041b8c7f3a
 ----
+=======
+== Features Added:
 
-== Docker distribution
+* +++<del>+++Restricted email sending to outside the org. e.g; <user>.<org>@<domain> can only send emails to other users with the same <org> and <domain>+++</del>+++
+* Added Gmail style "+ addressing". If your email is <user>@<domain>, you can use <user>\+<abc>@<domain> anywhere and still get your emails.
+The server ignores any string following the "+" character until the "@" character.
+(more details: https://eit.ces.ncsu.edu/2023/02/gmail-plus-addressing-the-hidden-feature-that-can-help-you-get-more-out-of-your-inbox/)
+* +++<del>+++ Disabled all authentication methods except JWT Authentication (RS256). User creation no longer requires a password. +++</del>+++
 
-To import the image locally:
+* Generating a JWT key pair: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/jmap.adoc#generating-a-jwt-key-pair
+* Added a webadmin route for deleting an entire group. Example cURL command:
+-----
+$ curl --location --request DELETE 'http://ip:port/address/groups/myGroup@mydomain'
+-----
+* Added a webadmin route for deleting multiple groups. Example cURL command:
+-----
+$ curl --location --request DELETE 'http://ip:port/address/groups' --data-raw '[
+    "myGroup1@mydomain",
+    "myGroup2@mydomain"
+]'
+-----
+* Added a webadmin route for creating an empty group. Example cURL command:
+-----
+$ curl --location --request POST 'http://ip:port/address/groups/myGroup@mydomain'
+-----
+* Added a webadmin route for adding multiple groups with members. Example cURL command:
+-----
+$ curl --location --request GET 'http://ip:port/address/groups/add-groups' \
+--data-raw '[
+  {
+    "groupAddr": "group1@mydomain",
+    "memberAddrs": [
+      "member1@mydomain"
+    ]
+  },
+  {
+    "groupAddr": "group2@mydomain",
+    "memberAddrs": [
+      "member2@mydomain",
+      "member3@mydomain"
+    ]
+  }
+]'
+-----
+Example response body:
+-----
+[
+    {
+        "address": "group1@mydomain",
+        "status": "success",
+        "reason": "",
+        "membersInfo": [
+            {
+                "address": "member1@mydomain",
+                "status": "success",
+                "reason": ""
+            }
+        ]
+    },
+    {
+        "address": "group2@mydomain",
+        "status": "success",
+        "reason": "",
+        "membersInfo": [
+            {
+                "address": "member2@mydomain",
+                "status": "success",
+                "reason": ""
+            },
+            {
+                "address": "member3@mydomain",
+                "status": "success",
+                "reason": ""
+            }
+        ]
+    }
+]
+-----
+* Added a webadmin route for checking groups' existence. Example cURL command:
+-----
+$ curl --location --request GET 'http://ip:port/address/groups/isExist' \
+--data-raw '[
+    "aksda.org@mydomain",
+    "group1.org@mydomain",
+]'
+-----
+Example response body:
+-----
+[
+    {
+        "address": "aksda.org@mydomain",
+        "status": "DoesNotExists",
+        "reason": ""
+    },
+    {
+        "address": "group1.org@mydomain",
+        "status": "Exists",
+        "reason": ""
+    },
+]
+-----
+
 
 [source]
-----
-docker image load -i target/jib-image.tar
-----
+
+== Running the server method 1
+-----
+
+$ docker compose -f docker-composeOLD.yml up
+
+-----
+
+== Running the server method 2
+-----
+
+$ cd server/apps/distributed-app/
+
+$ mvn clean install -DskipTests
+ OR
+$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.predefinedSortOrder=custom_1 -DskipTests clean install
 
 Then run it along with its dependency:
 
@@ -61,6 +168,13 @@ Disabled by default, its java agent can easily be enabled:
     environment:
       - JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar
 ----
+=======
+$ docker compose -f docker-compose.yml up -d
+
+$ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar target/james-server-distributed-app.jar --generate-keystore
+
+-----
+
 The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 
 
@@ -106,3 +220,33 @@ $ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.
 
 Note that binding ports below 1024 requires administrative rights.
 
+== Send emails using telnet
+
+```
+telnet 127.0.0.1 25
+EHLO spammer.com
+MAIL FROM: <sender@spammer.com>
+RCPT TO: <recipient@domain.tld>
+DATA
+Subject: This mail should be blocked
+
+Is it?
+.
+quit
+```
+
+```
+telnet 127.0.0.1 25
+EHLO spammer.com
+MAIL FROM: <another@spammer.com>
+RCPT TO: <recipient@domain.tld>
+DATA
+Subject: This mail should be received
+
+Is it?
+.
+quit
+```
+
+== TODO
+1. Have to check is all the images run the by docker-compose needed or not.
