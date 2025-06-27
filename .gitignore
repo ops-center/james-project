@@ -17,7 +17,6 @@ server/container/core/src/test/resources/*.eml
 mailbox/store/src/test/resources/eml/*.eml
 ./server/container/guice/common/src/test/resources/eml
 .m2
-*.eml
 test-run.log
 .mvn/.develocity
 build
