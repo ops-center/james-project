@@ -55,6 +55,10 @@ public class UserService {
         usersRepository.removeUser(username);
     }
 
+    public void removeUsers(List<Username> usernames) throws UsersRepositoryException {
+        usersRepository.removeUsers(usernames);
+    }
+
     public void upsertUser(Username username, char[] password) throws Exception {
         User user = usersRepository.getUserByName(username);
         if (user == null) {
