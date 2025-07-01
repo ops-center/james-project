@@ -1,10 +1,26 @@
+
 = Guice-Postgres Server How-to
 
 This server targets reactive James deployments with postgresql database.
 
+=== Compile and run with docker compose
+Edit these files to alter the james image name/tag:
+
+- *server/apps/postgres-app/pom.xml line 359*
+- *server/apps/postgres-app/docker-compose-minimal.yml line 6*
+
+The image is pushes to the registry defined int he pom.xml file.
+[source]
+```bash
+
+    mvn -T 4 clean install -Dmaven.javadoc.skip=true -DskipTests --pl :james-server-postgres-app --am
+
+    docker compose -f server/apps/postgres-app/docker-compose-minimal.yml up -d
+```
+
 == Requirements
 
-* Java 11 SDK
+* Java 21 SDK
 
 === With Postgresql only
 
@@ -20,6 +36,7 @@ Third party compulsory dependencies:
 ----
 $ docker run -d --network james -p 5432:5432 --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.9
 ----
+
 
 === Distributed version
 
