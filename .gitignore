@@ -8,3 +8,14 @@ dockerfiles/run/**/glowroot
 test-run.log
 build
 .mvn/.develocity
+
+.classpath
+.project
+.settings/
+.metadata/
+.factorypath
+bin/
+tmp/
+.idea
+.mvn/.gradle-enterprise
+./cs
