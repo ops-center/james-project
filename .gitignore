@@ -4,11 +4,11 @@ dockerfiles/run/**/*.lib
 dockerfiles/run/**/*.jar
 dockerfiles/run/**/keystore
 dockerfiles/run/**/glowroot
-.classpath
-.project
-.settings/
-.metadata/
-.factorypath
+*.classpath
+*.project
+*.settings/
+*.metadata/
+*.factorypath
 
 bin/
 tmp/
