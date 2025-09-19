@@ -83,7 +83,6 @@ public class PostgresDataJmapModule extends AbstractModule {
         bind(PostgresEmailQueryView.class).in(Scopes.SINGLETON);
         bind(EmailQueryViewManager.class).to(PostgresEmailQueryViewManager.class);
 
-
         bind(PostgresThreadQueryView.class).in(Scopes.SINGLETON);
         bind(ThreadQueryView.class).to(PostgresThreadQueryView.class);
         bind(PostgresThreadQueryView.class).in(Scopes.SINGLETON);

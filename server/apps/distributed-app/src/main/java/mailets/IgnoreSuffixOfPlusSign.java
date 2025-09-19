@@ -26,7 +26,6 @@ import org.apache.mailet.base.GenericMailet;
 
 import com.github.steveash.guavate.Guavate;
 
-
 public class IgnoreSuffixOfPlusSign extends GenericMailet {
     IgnoreSuffixOfPlusSign() {}
 
@@ -36,5 +35,11 @@ public class IgnoreSuffixOfPlusSign extends GenericMailet {
                 .stream()
                 .map(recipient -> trimSuffixOfPlusSign(recipient))
                 .collect(Guavate.toImmutableList()));
+
+        /*System.out.println("\nModified recipients: ");
+        for (var k : mail.getRecipients()) {
+            System.out.println(k.asString());
+        }
+        System.out.println("\n\n-----------");*/
     }
 }
