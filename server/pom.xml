@@ -79,6 +79,7 @@
         <module>dns-service/dnsservice-dnsjava</module>
         <module>dns-service/dnsservice-library</module>
         <module>dns-service/dnsservice-test</module>
+        <module>helpers</module>
 
         <module>mailet/dkim</module>
         <module>mailet/integration-testing</module>
@@ -132,6 +133,15 @@
     <properties>
         <productName>Apache-James Mail Server</productName>
     </properties>
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.json/json -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+        </dependency>
+
+    </dependencies>
     <build>
         <pluginManagement>
             <plugins>

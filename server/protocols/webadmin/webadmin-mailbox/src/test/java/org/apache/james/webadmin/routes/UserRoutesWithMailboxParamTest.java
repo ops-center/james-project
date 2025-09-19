@@ -57,6 +57,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,7 +90,8 @@ public class UserRoutesWithMailboxParamTest {
                 new JsonTransformer(),
                 new MemoryDelegationStore(),
                 ImmutableMap.of(HAS_NO_MAILBOXES_PARAM, new HasNoMailboxesCondition(userMailboxService),
-                    HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM, new HasNotAllSystemMailboxesCondition(userMailboxService))))
+                    HAS_NOT_ALL_SYSTEM_MAILBOXES_PARAM, new HasNotAllSystemMailboxesCondition(userMailboxService)),
+                new ObjectMapper()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

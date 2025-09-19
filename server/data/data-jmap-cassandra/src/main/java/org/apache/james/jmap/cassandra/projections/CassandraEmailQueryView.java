@@ -85,13 +85,14 @@ public class CassandraEmailQueryView implements EmailQueryView {
     @Inject
     public CassandraEmailQueryView(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
-
+        System.out.println("cassandra JMAP email query view");
         listMailboxContentBySentAt = session.prepare(selectFrom(TABLE_NAME_SENT_AT)
             .columns(MESSAGE_ID, SENT_AT, THREAD_ID)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .orderBy(SENT_AT, DESC)
             .limit(bindMarker(LIMIT_MARKER))
             .build());
+
 
         listMailboxContentByReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
             .columns(MESSAGE_ID, RECEIVED_AT, THREAD_ID)
