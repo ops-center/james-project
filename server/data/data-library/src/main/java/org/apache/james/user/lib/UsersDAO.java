@@ -20,6 +20,7 @@
 package org.apache.james.user.lib;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
@@ -42,6 +43,10 @@ public interface UsersDAO {
     void updateUser(User user) throws UsersRepositoryException;
 
     void removeUser(Username name) throws UsersRepositoryException;
+
+    default void removeUsers(List<Username> name) throws UsersRepositoryException {
+        throw new UsersRepositoryException("'removeUsers' currently only implemented for PostgresUsersDAO");
+    }
 
     boolean contains(Username name) throws UsersRepositoryException;
 
