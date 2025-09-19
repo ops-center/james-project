@@ -55,6 +55,9 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -73,7 +76,7 @@ public class UserRoutes implements Routes {
     private static final String FORCE_PARAM = "force";
     private static final String VERIFY = "verify";
     private static final String AUTHORIZED_USERS = "authorizedUsers";
-
+    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
@@ -81,6 +84,7 @@ public class UserRoutes implements Routes {
     private final JsonExtractor<AddUserRequest> jsonExtractor;
     private final DelegationStore delegationStore;
     private final Map<String, UserCondition> userConditionMap;
+    private final ObjectMapper objectMapper;
 
     private Service service;
 
@@ -89,7 +93,9 @@ public class UserRoutes implements Routes {
                       CanSendFrom canSendFrom,
                       JsonTransformer jsonTransformer,
                       DelegationStore delegationStore,
-                      Map<String, UserCondition> userConditionMap) {
+                      Map<String, UserCondition> userConditionMap,
+                      ObjectMapper objectMapper
+    ) {
         this.userService = userService;
         this.jsonTransformer = jsonTransformer;
         this.canSendFrom = canSendFrom;
@@ -97,6 +103,7 @@ public class UserRoutes implements Routes {
         this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
         this.delegationStore = delegationStore;
         this.userConditionMap = userConditionMap;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -109,6 +116,8 @@ public class UserRoutes implements Routes {
         this.service = service;
 
         defineGetUsers();
+
+        defineDeleteUsers();
 
         defineCreateUser();
 
@@ -167,10 +176,33 @@ public class UserRoutes implements Routes {
             jsonTransformer);
     }
 
+    public void defineDeleteUsers() {
+        service.delete(USERS,
+                this::deleteUsers,
+                jsonTransformer);
+    }
+
     public void defineAllowedFromHeaders() {
         service.get(USERS + SEPARATOR + USER_NAME + SEPARATOR + "allowedFromHeaders",
             this::allowedFromHeaders,
             jsonTransformer);
+    }
+
+    // Delete all users, given the user emails in the payload as a json list.
+    // e.g; ["user@mydomain", "user2@mydomain", ...]
+    private String deleteUsers(Request request, Response response) throws JsonProcessingException {
+        String jsonString = request.body();
+        List<String> users = objectMapper.readValue(jsonString, new TypeReference<>() {});
+
+        try {
+            userService.removeUsers(users.stream().map(Username::of).toList());
+        } catch (UsersRepositoryException e) {
+            response.status(HttpStatus.BAD_REQUEST_400);
+            return e.getMessage();
+        }
+
+        response.status(HttpStatus.OK_200);
+        return Constants.EMPTY_BODY;
     }
 
     private List<UserResponse> getUsers(Request request, Response response) throws UsersRepositoryException {
@@ -212,6 +244,14 @@ public class UserRoutes implements Routes {
 
     private HaltException upsertUser(Request request, Response response) throws Exception {
         Username username = extractUsername(request);
+        if (dummyUser.equals(username.asString())) {
+            LOGGER.info("Invalid username");
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Username supplied is invalid")
+                    .haltError();
+        }
         try {
             boolean isForced = request.queryParams().contains(FORCE_PARAM);
             if (isForced) {
