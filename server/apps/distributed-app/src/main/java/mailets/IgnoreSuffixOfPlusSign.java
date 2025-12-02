@@ -28,29 +28,13 @@ import com.github.steveash.guavate.Guavate;
 
 
 public class IgnoreSuffixOfPlusSign extends GenericMailet {
-    IgnoreSuffixOfPlusSign() {
-
-    }
+    IgnoreSuffixOfPlusSign() {}
 
     @Override
     public void service(Mail mail) {
-        //System.out.println("\n\n-----------");
-        //System.out.println("plus sign reached");
-        //System.out.println("Initial recipients: ");
-
-        for (var k : mail.getRecipients()) {
-            System.out.println(k.asString());
-        }
-
         mail.setRecipients(mail.getRecipients()
                 .stream()
                 .map(recipient -> trimSuffixOfPlusSign(recipient))
                 .collect(Guavate.toImmutableList()));
-
-        /*System.out.println("\nModified recipients: ");
-        for (var k : mail.getRecipients()) {
-            System.out.println(k.asString());
-        }
-        System.out.println("\n\n-----------");*/
     }
 }
