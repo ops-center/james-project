@@ -99,7 +99,7 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}:{{port}}/healthcheck",
+									"raw": "http://{{host}}:{{port}}/healthcheck?check=EventDeadLettersHealthChec",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -107,6 +107,12 @@
 									"port": "{{port}}",
 									"path": [
 										"healthcheck"
+									],
+									"query": [
+										{
+											"key": "check",
+											"value": "EventDeadLettersHealthChec"
+										}
 									]
 								}
 							},
@@ -120,7 +126,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "{{inbox-server-admin-token}}",
+											"value": "{{adminToken}}",
 											"type": "string"
 										}
 									]
@@ -129,7 +135,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "From: tmpuser3@mydomain\nTo: tmpuser3@mydomain\nMIME-Version: 1.0\nContent-Type: multipart/mixed;\n        boundary=\"XXXXboundary text\"\n\nThis is a multipart message in MIME format.\n\n--XXXXboundary text\nContent-Type: text/plain\n\ngroup works\n\n--XXXXboundary text\nContent-Type: text/plain;\nContent-Disposition: attachment;\n        filename=\"test.txt\"\n\nthis is the attachment text\n\n--XXXXboundary text--",
+									"raw": "From: tmpuser3@mydomain\nTo: recipient.acc@@cloud.appscode.com\nMIME-Version: 1.0\nContent-Type: multipart/mixed;\n        boundary=\"XXXXboundary text\"\n\nThis is a multipart message in MIME format.\n\n--XXXXboundary text\nContent-Type: text/plain\n\ngroup works\n\n--XXXXboundary text\nContent-Type: text/plain;\nContent-Disposition: attachment;\n        filename=\"test.txt\"\n\nthis is the attachment text\n\n--XXXXboundary text--",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -153,16 +159,6 @@
 						{
 							"name": "ReIndex all emails",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{adminToken}}",
-											"type": "string"
-										}
-									]
-								},
 								"method": "POST",
 								"header": [
 									{
@@ -209,7 +205,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "{{webadminJWT}}",
+											"value": "{{adminToken}}",
 											"type": "string"
 										}
 									]
@@ -254,7 +250,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "{{webadminJWT}}",
+											"value": "{{adminToken}}",
 											"type": "string"
 										}
 									]
@@ -271,7 +267,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}:{{port}}/tasks/ca4e4ca3-221e-499a-b44a-7eef0c831b61",
+									"raw": "http://{{host}}:{{port}}/tasks/6cfb1a3f-24a8-4254-a234-cf30e38f69cd",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -279,26 +275,21 @@
 									"port": "{{port}}",
 									"path": [
 										"tasks",
-										"ca4e4ca3-221e-499a-b44a-7eef0c831b61"
+										"6cfb1a3f-24a8-4254-a234-cf30e38f69cd"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "Download (easier with curl) testuser",
+							"name": "Download (easier with curl)",
 							"request": {
 								"auth": {
-									"type": "basic",
-									"basic": [
+									"type": "bearer",
+									"bearer": [
 										{
-											"key": "username",
-											"value": "testuser.org@mydomain",
-											"type": "string"
-										},
-										{
-											"key": "password",
-											"value": "password",
+											"key": "token",
+											"value": "{{adminToken}}",
 											"type": "string"
 										}
 									]
@@ -311,15 +302,16 @@
 									}
 								],
 								"url": {
-									"raw": "http://{{host}}/download/{{accountId}}/b50c5eb0-8f4b-11ee-849d-9fa9bb19403d_4?type=text%2Fplain&name=toUpload2.txt",
+									"raw": "http://{{host}}/jmap/download/{{accountId}}/uploads-01961556-1f6e-798e-a71e-e7134348bddf?type=text%2Fplain&name=toUpload3.txt",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
+										"jmap",
 										"download",
 										"{{accountId}}",
-										"b50c5eb0-8f4b-11ee-849d-9fa9bb19403d_4"
+										"uploads-01961556-1f6e-798e-a71e-e7134348bddf"
 									],
 									"query": [
 										{
@@ -328,7 +320,7 @@
 										},
 										{
 											"key": "name",
-											"value": "toUpload2.txt"
+											"value": "toUpload3.txt"
 										}
 									]
 								}
@@ -336,53 +328,68 @@
 							"response": []
 						},
 						{
-							"name": "Download (easier with curl) sami",
+							"name": "Upload binary data",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
 							"request": {
 								"auth": {
 									"type": "bearer",
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlci5vcmdAbXlkb21haW4iLCJpYXQiOjE2MTYyMzkwMjIsImV4cCI6MTk0NjIzOTAyMn0.SO2fTuxB6qQNZqkhwWAndyqXDpyZMrHZFNdgG5ka7j8dW0G9JqU-rx04wqL-R2T51QCVYnlLBM62AVEltK-85ck10nFHEEFwQSD85v5PpI_qzeTz4NRFDxek-5N2gYdK0XQ6NzMvlSwxyUM2TkNZCupIto9H3MDeuDSs0p6Xmwk3iaGKJcIorIUbImf8xzwfB39ytpOw1j6ggAGjczZH8Ykz2PnHQQX2TU8R_dGbn6euYOqnTiZDWggfbxaS1joJ3PatN0Q-jxfuQGwTdZWeSN-Ocvr55MitQvMKJQaoRMVAOFCPXuhCkMq1szKRaBbhnL1nFjmHBpMJC5VpSeDgKOa-govmuTrnRMDV15n5KeeSWEeE2Km9ibOqzZktlR5EU-lU16h-a0u5ydPfax4HcUnNnVcKFqjSGyMFyBQOOxQWKrSJdHNaA7ZP07QQjwdSRQFbJHsUBdH22oBfTnT891yMmWW1iFLHZuV2sMivUGnH-EBO29HHVzAXUlOzErqDaVnovMvdPN6_Vi80LpdSWikYbe2zXUV4csBAc6bC1NweP9omNidBk9Vgo-3q2mHw-H6mfFnTONUipbtbV8ifI2MKQ-ZS0ciNomOcNgyYu5mc-ebDFpZU9xx-_nakCOscUm0tHN224MxKNIx-9E7XrS0PlSOauNYqi4AVKP9svW0",
+											"value": "{{adminToken}}",
 											"type": "string"
 										}
 									]
 								},
-								"method": "GET",
+								"method": "POST",
 								"header": [
 									{
 										"key": "Content-Type",
-										"value": "application/json; charset=utf-8"
+										"value": "text/plain; charset=utf-8"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlci5vcmdAbXlkb21haW4iLCJpYXQiOjE2MTYyMzkwMjIsImV4cCI6MTk0NjIzOTAyMn0.SO2fTuxB6qQNZqkhwWAndyqXDpyZMrHZFNdgG5ka7j8dW0G9JqU-rx04wqL-R2T51QCVYnlLBM62AVEltK-85ck10nFHEEFwQSD85v5PpI_qzeTz4NRFDxek-5N2gYdK0XQ6NzMvlSwxyUM2TkNZCupIto9H3MDeuDSs0p6Xmwk3iaGKJcIorIUbImf8xzwfB39ytpOw1j6ggAGjczZH8Ykz2PnHQQX2TU8R_dGbn6euYOqnTiZDWggfbxaS1joJ3PatN0Q-jxfuQGwTdZWeSN-Ocvr55MitQvMKJQaoRMVAOFCPXuhCkMq1szKRaBbhnL1nFjmHBpMJC5VpSeDgKOa-govmuTrnRMDV15n5KeeSWEeE2Km9ibOqzZktlR5EU-lU16h-a0u5ydPfax4HcUnNnVcKFqjSGyMFyBQOOxQWKrSJdHNaA7ZP07QQjwdSRQFbJHsUBdH22oBfTnT891yMmWW1iFLHZuV2sMivUGnH-EBO29HHVzAXUlOzErqDaVnovMvdPN6_Vi80LpdSWikYbe2zXUV4csBAc6bC1NweP9omNidBk9Vgo-3q2mHw-H6mfFnTONUipbtbV8ifI2MKQ-ZS0ciNomOcNgyYu5mc-ebDFpZU9xx-_nakCOscUm0tHN224MxKNIx-9E7XrS0PlSOauNYqi4AVKP9svW0"
 									}
 								],
+								"body": {
+									"mode": "raw",
+									"raw": "aasdasdasd"
+								},
 								"url": {
-									"raw": "http://{{host}}/download/{{accountId}}/uploads-4c2ef740-b115-11ee-8311-9b9e3b5ba63c?type%3Dimage%2Fpng%26name%3Dcat.png",
+									"raw": "http://{{host}}/jmap/upload/{{accountId}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
-										"download",
-										"{{accountId}}",
-										"uploads-4c2ef740-b115-11ee-8311-9b9e3b5ba63c"
-									],
-									"query": [
-										{
-											"key": "type%3Dimage%2Fpng%26name%3Dcat.png",
-											"value": null
-										}
+										"jmap",
+										"upload",
+										"{{accountId}}"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "upload test 2",
+							"name": "Clean up upload repository",
 							"protocolProfileBehavior": {
 								"disabledSystemHeaders": {}
 							},
 							"request": {
-								"method": "POST",
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
 								"header": [
 									{
 										"key": "Content-Type",
@@ -396,18 +403,25 @@
 								"body": {
 									"mode": "file",
 									"file": {
-										"src": "/home/sami/james-project/diffs.txt"
+										"src": "/home/sami/inbox-server-sami.yaml"
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}/upload/{{accountId}}",
+									"raw": "http://{{host}}:8000/jmap/uploads?scope=expired",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
 									],
+									"port": "8000",
 									"path": [
-										"upload",
-										"{{accountId}}"
+										"jmap",
+										"uploads"
+									],
+									"query": [
+										{
+											"key": "scope",
+											"value": "expired"
+										}
 									]
 								}
 							},
@@ -437,7 +451,7 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://{{host}}:{{port}}/address/aliases/usr&test1$49@cloud.appscode.com",
+											"raw": "http://{{host}}:{{port}}/address/aliases/tmpuser@cloud.appscode.com",
 											"protocol": "http",
 											"host": [
 												"{{host}}"
@@ -446,7 +460,7 @@
 											"path": [
 												"address",
 												"aliases",
-												"usr&test1$49@cloud.appscode.com"
+												"tmpuser@cloud.appscode.com"
 											]
 										}
 									},
@@ -454,6 +468,9 @@
 								},
 								{
 									"name": "Get all aliases",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
 									"request": {
 										"auth": {
 											"type": "bearer",
@@ -467,6 +484,54 @@
 										},
 										"method": "GET",
 										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://{{host}}:{{port}}/address/aliases",
+											"protocol": "http",
+											"host": [
+												"{{host}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"address",
+												"aliases"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete all aliases",
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{adminToken}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "[\n]",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
 										"url": {
 											"raw": "http://{{host}}:{{port}}/address/aliases",
 											"protocol": "http",
@@ -490,15 +555,24 @@
 											"bearer": [
 												{
 													"key": "token",
-													"value": "{{inbox-agentJWT}}",
+													"value": "{{adminToken}}",
 													"type": "string"
 												}
 											]
 										},
 										"method": "DELETE",
 										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "[\n    \"recipient@cloud.appscode.com\"\n]",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
 										"url": {
-											"raw": "http://{{host}}:{{port}}/address/aliases/manyalias2@cloud.appscode.com/sources/manyalias@cloud.appscode.com",
+											"raw": "http://{{host}}:{{port}}/address/aliases/tmpuser@cloud.appscode.com/sources/recipient22.acc@cloud.appscode.com",
 											"protocol": "http",
 											"host": [
 												"{{host}}"
@@ -507,9 +581,9 @@
 											"path": [
 												"address",
 												"aliases",
-												"manyalias2@cloud.appscode.com",
+												"tmpuser@cloud.appscode.com",
 												"sources",
-												"manyalias@cloud.appscode.com"
+												"recipient22.acc@cloud.appscode.com"
 											]
 										}
 									},
@@ -531,7 +605,7 @@
 										"method": "PUT",
 										"header": [],
 										"url": {
-											"raw": "http://{{host}}:{{port}}/address/aliases/usr&test1$49@cloud.appscode.com/sources/manyalias@cloud.appscode.com",
+											"raw": "http://{{host}}:{{port}}/address/aliases/tmpuser@cloud.appscode.com/sources/tmpuseralias@cloud.appscode.com",
 											"protocol": "http",
 											"host": [
 												"{{host}}"
@@ -540,9 +614,9 @@
 											"path": [
 												"address",
 												"aliases",
-												"usr&test1$49@cloud.appscode.com",
+												"tmpuser@cloud.appscode.com",
 												"sources",
-												"manyalias@cloud.appscode.com"
+												"tmpuseralias@cloud.appscode.com"
 											]
 										}
 									},
@@ -553,16 +627,6 @@
 						{
 							"name": "Add mydomain",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{adminToken}}",
-											"type": "string"
-										}
-									]
-								},
 								"method": "PUT",
 								"header": [],
 								"url": {
@@ -581,7 +645,7 @@
 							"response": []
 						},
 						{
-							"name": "Add testuser.acc@cloud.appscode.com",
+							"name": "usr&admin$1@cloud.appscode.com",
 							"request": {
 								"auth": {
 									"type": "bearer",
@@ -610,7 +674,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}:{{port}}/users/recipient.acc@cloud.appscode.com",
+									"raw": "http://{{host}}:{{port}}/users/usr$1@cloud.appscode.com",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -618,14 +682,14 @@
 									"port": "{{port}}",
 									"path": [
 										"users",
-										"recipient.acc@cloud.appscode.com"
+										"usr$1@cloud.appscode.com"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "Add recipient.acc@cloud.appscode.com",
+							"name": "usr&admin$2@cloud.appscode.com",
 							"request": {
 								"auth": {
 									"type": "bearer",
@@ -654,7 +718,7 @@
 									}
 								},
 								"url": {
-									"raw": "http://{{host}}:{{port}}/users/recipient.acc@cloud.appscode.com",
+									"raw": "http://{{host}}:{{port}}/users/recipient@cloud.appscode.com",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -662,7 +726,7 @@
 									"port": "{{port}}",
 									"path": [
 										"users",
-										"recipient.acc@cloud.appscode.com"
+										"recipient@cloud.appscode.com"
 									]
 								}
 							},
@@ -671,16 +735,6 @@
 						{
 							"name": "List Users",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{adminToken}}",
-											"type": "string"
-										}
-									]
-								},
 								"method": "GET",
 								"header": [
 									{
@@ -733,6 +787,50 @@
 							"response": []
 						},
 						{
+							"name": "Delete all users",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{adminToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Connection",
+										"value": "close",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    \"tmpuser@cloud.appscode.com\",\n    \"recipient@cloud.appscode.com\",\n   // \"recipient.acc@cloud.appscode.com\",\n   // \"recipient1.acc@cloud.appscode.com\",\n    \"tmpuser22@cloud.appscode.com\",\n    \"tmpuser223@cloud.appscode.com\",\n    \"tmpuserasd22@cloud.appscode.com\"\n]",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}:{{port}}/users",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "username change",
 							"request": {
 								"auth": {
@@ -778,6 +876,53 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "Change password",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "",
+										"value": "",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"password\":\"password\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{host}}:{{port}}/users/usr$1@cloud.appscode.com?force",
+									"protocol": "http",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"users",
+										"usr$1@cloud.appscode.com"
+									],
+									"query": [
+										{
+											"key": "force",
+											"value": null
+										}
+									]
+								},
+								"description": "Generated from cURL:  curl -XPUT http://10.2.0.164:8000/users/usr&appscode$1@cloud.appscode.com?force -d '{\"password\":\"password\"}' -H \"Content-Type: application/json\""
+							},
+							"response": []
 						}
 					]
 				},
@@ -787,20 +932,10 @@
 						{
 							"name": "Add user to group",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{adminToken}}",
-											"type": "string"
-										}
-									]
-								},
 								"method": "PUT",
 								"header": [],
 								"url": {
-									"raw": "http://{{host}}:{{port}}/address/groups/cluster&kube-system$cfa342bd-a9f7-4a89-a3b4-b8b1048deb66&meta&ace$2&org@cloud.appscode.com/usr&appscode&1@cloud.appscode.com",
+									"raw": "http://{{host}}:{{port}}/address/groups/ns$1debd001-9558-4908-b94d-2fe5f8268f6f&meta$2$org@ace.internal/{{inbox-ui-user}}",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -809,8 +944,8 @@
 									"path": [
 										"address",
 										"groups",
-										"cluster&kube-system$cfa342bd-a9f7-4a89-a3b4-b8b1048deb66&meta&ace$2&org@cloud.appscode.com",
-										"usr&appscode&1@cloud.appscode.com"
+										"ns$1debd001-9558-4908-b94d-2fe5f8268f6f&meta$2$org@ace.internal",
+										"{{inbox-ui-user}}"
 									]
 								}
 							},
@@ -824,7 +959,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "{{webadminJWT}}",
+											"value": "{{adminToken}}",
 											"type": "string"
 										}
 									]
@@ -961,16 +1096,6 @@
 						{
 							"name": "List groups",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": [
-										{
-											"key": "token",
-											"value": "{{adminToken}}",
-											"type": "string"
-										}
-									]
-								},
 								"method": "GET",
 								"header": [],
 								"url": {
@@ -1004,7 +1129,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://{{host}}:{{port}}/address/groups/ns&demo$972c661f-0680-4e35-9c41-57f4a7a26788.cluster&kube-system$92398ede-e882-46ee-9783-6414dbeb7a23&meta&ace$2&org@cloud.appscode.com",
+									"raw": "http://{{host}}:{{port}}/address/groups/cluster&ace$d03c549c-dd54-4cd9-a072-04472a731fdd&meta&ace$2&org@cloud.appscode.com",
 									"protocol": "http",
 									"host": [
 										"{{host}}"
@@ -1013,7 +1138,7 @@
 									"path": [
 										"address",
 										"groups",
-										"ns&demo$972c661f-0680-4e35-9c41-57f4a7a26788.cluster&kube-system$92398ede-e882-46ee-9783-6414dbeb7a23&meta&ace$2&org@cloud.appscode.com"
+										"cluster&ace$d03c549c-dd54-4cd9-a072-04472a731fdd&meta&ace$2&org@cloud.appscode.com"
 									]
 								}
 							},
@@ -1036,7 +1161,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "[\n    \"kube-system$744e45d0-4b9f-48e1-b532-b85bbcabe227&cluster.x&type-grp&nm-test123&id-1&typ-user@cloud.appscode.com\",\n    \"monitoring$8630730e-3e13-485f-aac3-86a31024ffa6&ns.kube-system$744e45d0-4b9f-48e1-b532-b85bbcabe227&cluster.x&type-acc&nm-test123&id-1&typ-user@cloud.appscode.com\"\n]",
+									"raw": "[\n\n]",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1102,6 +1227,28 @@
 							"response": []
 						}
 					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
@@ -1203,7 +1350,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{agentToken}}",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -1371,12 +1518,45 @@
 				{
 					"name": "Mailbox/query",
 					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json; charset=utf-8"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n        \"filter\": {\n            \"operator\": \"OR\",\n            \"conditions\": [\n             { \"role\": \"Inbox\" },\n                         { \"role\": \"Drafts\" }\n                       ]\n                     }\n    }, \"mbQuery\" ],\n\n    [ \"Mailbox/query\", {\n        \"#accountId\" : {\n            \"name\": \"Mailbox/query\",\n            \"resultOf\": \"mbQuery\",\n            \"path\": \"/accountId\"\n        },\n\n        \"filter\": {\n            \"after\": \"2023-01-01T00:00:00Z\"\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ]\n    }, \"1\" ]\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}:{{jmapPort}}/jmap",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{jmapPort}}",
+							"path": [
+								"jmap"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mailbox/query filter by role",
+					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{inbox-agentJWT}}",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -1390,7 +1570,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n                     \"filter\": {\n                       \"operator\": \"OR\",\n                       \"conditions\": [\n                         { \"role\": \"Inbox\" },\n                         { \"role\": \"Drafts\" }\n                       ]\n                     }\n    }, \"mbQuery\" ],\n\n    [ \"Mailbox/query\", {\n        \"#accountId\" : {\n            \"name\": \"Mailbox/query\",\n            \"resultOf\": \"mbQuery\",\n            \"path\": \"/accountId\"\n        },\n\n        \"filter\": {\n            \"after\": \"2023-01-01T00:00:00Z\"\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ]\n    }, \"1\" ]\n  ]\n}",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n        \"filter\": {\n             \"role\": \"Drafts\"\n        }\n    }, \"draftsQuery\" ],\n\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n        \"filter\": {\n             \"role\": \"Sent\"\n        }\n    }, \"sentQuery\" ],\n\n    [ \"Core/echo\", {\n        \"#draftID\" : {\n            \"name\": \"Mailbox/query\",\n            \"resultOf\": \"draftsQuery\",\n            \"path\": \"/ids/0\"\n        },\n        \n        \"#sentID\": {\n            \"name\":\"Mailbox/query\",\n            \"resultOf\": \"sentQuery\",\n            \"path\": \"/ids/0\"\n        }\n    }, \"1\" ]\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1591,7 +1771,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{testuser.org@mydomain}}",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -1629,16 +1809,6 @@
 				{
 					"name": "Fetch email body",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminToken}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
 						"header": [
 							{
@@ -1648,7 +1818,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n      //\"accountId\": \"7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22\",//testuser\n      \"filter\": {\"role\": \"INBOX\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"#accountId\": {\n            \"name\": \"Mailbox/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"mbQuery\"\n        },\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n                \n                {\"#inMailbox\": {\n                \"name\": \"Mailbox/query\",\n                \"resultOf\": \"mbQuery\",\n                \"path\": \"ids/0\"\n                }}\n               // {\"header\":[\"hehe2\"]}\n                //{\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ],\n        \"position\": 0,\n        \"limit\": 20\n    }, \"0\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n        \"properties\": [\"id\", \"inReplyTo\", \"threadId\"],\n        \"fetchAllBodyValues\": true,\n        \"fetchHTMLBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n      //\"accountId\": \"7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22\",//testuser\n      \"filter\": {\"role\": \"INBOX\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"#accountId\": {\n            \"name\": \"Mailbox/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"mbQuery\"\n        },\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n                \n                {\"#inMailbox\": {\n                \"name\": \"Mailbox/query\",\n                \"resultOf\": \"mbQuery\",\n                \"path\": \"ids/0\"\n                }}\n               // {\"header\":[\"hehe2\"]}\n                //{\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ],\n        \"collapseThreads\": true,\n        \"position\": 0,\n        \"limit\": 20\n    }, \"0\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n        \"properties\": [\"id\", \"inReplyTo\", \"threadId\"],\n        \"fetchAllBodyValues\": true,\n        \"fetchHTMLBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1670,14 +1840,14 @@
 					"response": []
 				},
 				{
-					"name": "Fetch email body Copy",
+					"name": "SearchSnippet/get",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{inbox-agentJWT}}",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -1691,7 +1861,83 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n\n\n    [ \"Email/query\", {\n        \"accountId\": \"{{accountId}}\"\n        \"limit\":2\n    }, \"0\" ],\n        \n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n        \"properties\": [\"bodyValues\"],\n        \"fetchAllBodyValues\": true,\n        \"fetchHTMLBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n      //\"accountId\": \"7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22\",//testuser\n      \"filter\": {\"role\": \"INBOX\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"#accountId\": {\n            \"name\": \"Mailbox/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"mbQuery\"\n        },\n        // \"filter\": {\n        //     \"operator\": \"AND\",\n        //     \"conditions\": [\n        //         {\n        //             \"#inMailbox\": {\n        //                 \"name\": \"Mailbox/query\",\n        //                 \"resultOf\": \"mbQuery\",\n        //                 \"path\": \"ids/0\"\n        //             }\n        //         },\n        //         {\"body\": \"appscode\"},\n        //         {\"subject\": \"hehe\"}\n        //        // {\"header\":[\"hehe2\"]}\n        //         //{\"notKeyword\": \"$seen\"}\n        //     ]\n        // },\n        // \"sort\": [\n        //     { \"property\": \"receivedAt\", \"isAscending\": false }\n        // ],\n        // \"collapseThreads\": true,\n        \"position\": 0,\n        \"limit\": 20\n    }, \"0\" ],\n\n    [ \"SearchSnippet/get\", {\n        \"#accountId\": {\n            \"name\": \"Mailbox/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"mbQuery\"\n        },\n        \"#emailIds\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n                {\n                    \"#inMailbox\": {\n                        \"name\": \"Mailbox/query\",\n                        \"resultOf\": \"mbQuery\",\n                        \"path\": \"ids/0\"\n                    }\n                },\n                {\"body\": \"appscode\"},\n                {\"subject\": \"hehe\"}\n               // {\"header\":[\"hehe2\"]}\n                //{\"notKeyword\": \"$seen\"}\n            ]\n        }\n        // \"sort\": [\n        //     { \"property\": \"receivedAt\", \"isAscending\": false }\n        // ],\n        // \"collapseThreads\": true,\n        // \"position\": 0,\n        // \"limit\": 20\n    }, \"ss\" ]\n\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}:{{jmapPort}}/jmap",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{jmapPort}}",
+							"path": [
+								"jmap"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fetch email basic",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json; charset=utf-8"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n      \"filter\": {\"role\": \"INBOX\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"accountId\": \"{{accountId}}\",\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n                {\n                    \"#inMailbox\": {\n                        \"name\": \"Mailbox/query\",\n                        \"resultOf\": \"mbQuery\",\n                        \"path\": \"ids/0\"\n                    }\n                }\n               // {\"header\": [\"measure_hold_military_boy_account\"]}\n               // {\"hasKeyword\": \"$seen\"},\n              //  {\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"limit\":1,\n        \"position\":0\n    }, \"0\" ],\n        \n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n        \"properties\": [\"messageId\"],\n        \"fetchAllBodyValues\": true,\n        \"fetchHTMLBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}:{{jmapPort}}/jmap",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{jmapPort}}",
+							"path": [
+								"jmap"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set seen keyword",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json; charset=utf-8"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Email/set\", {\n      \"accountId\": \"{{accountId}}\",\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"update\": {\n                    \"019618df-4115-7571-8857-529c9b370ea4\" : {\n                        \"keywords/$seen\": true\n                    },\n                     \"019618df-4134-7a5a-b513-d75df437ce5c\" : {\n                        \"keywords/$seen\": true\n                    }\n        }\n    }, \"1\" ]\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1734,7 +1980,50 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [\n      \"Thread/get\",\n      {\n        \"accountId\": \"{{accountId}}\",\n        \"ids\": [\"8859cd50-dc91-11ef-a56c-1be6066b10ed\"] , \n        \"sort\": [{ \"property\": \"receivedAt\", \"isAscending\": false }],\n        \"collapseThreads\": true,\n        \"position\": 0,\n        \"limit\": 1\n      },\n      \"c1\"\n    ],\n    [\n        \"Email/get\",\n        {\n            \"#accountId\": {\n                \"name\": \"Thread/get\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"c1\"\n            },\n        // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"#ids\": {\n                \"name\": \"Thread/get\",\n                \"path\": \"/list/*/emailIds\",\n                \"resultOf\": \"c1\"\n            },\n        // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n            \"properties\": [\"id\", \"inReplyTo\", \"threadId\"],\n            \"fetchAllBodyValues\": true,\n            \"fetchHTMLBodyValues\": true\n        },\n        \"c2\"\n    ]\n  ]\n}",
+							"raw": "{\n  \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [\n      \"Thread/get\",\n      {\n        \"accountId\": \"{{accountId}}\",\n        \"ids\": [\"01953711-adf2-7b93-8e6f-61b5005a5138\"] , \n        \"sort\": [{ \"property\": \"receivedAt\", \"isAscending\": false }],\n        \"collapseThreads\": true\n      },\n      \"c1\"\n    ],\n    [\n        \"Email/get\",\n        {\n            \"#accountId\": {\n                \"name\": \"Thread/get\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"c1\"\n            },\n        // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"#ids\": {\n                \"name\": \"Thread/get\",\n                \"path\": \"/list/*/emailIds\",\n                \"resultOf\": \"c1\"\n            },\n        // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n            \"properties\": [\"id\", \"inReplyTo\", \"threadId\"],\n            \"fetchAllBodyValues\": true,\n            \"fetchHTMLBodyValues\": true\n        },\n        \"c2\"\n    ]\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}:{{jmapPort}}/jmap",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{jmapPort}}",
+							"path": [
+								"jmap"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Thread/query",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json; charset=utf-8"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [\n        \"Thread/query\", {\n                \"accountId\": \"{{accountId}}\",\n                \"filter\": { \"inMailbox\": \"c5863841-7fca-42a3-a5ca-5e0c6c4f80d4\" },\n                \"position\": 0,\n                \"limit\": 10\n        },\n      \"c1\"\n    ]\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1759,16 +2048,11 @@
 					"name": "Send Email",
 					"request": {
 						"auth": {
-							"type": "basic",
-							"basic": [
+							"type": "bearer",
+							"bearer": [
 								{
-									"key": "password",
-									"value": "password",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "recipient.acc@cloud.appscode.com",
+									"key": "token",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -1782,7 +2066,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n\n    [ \"Email/set\", \n        { \n            \"accountId\": \"{{accountId}}\",\n     \n            \"create\": {\n                \"draft\": {\n                    \"from\": [{\"email\": \"recipient.acc@cloud.appscode.com\"}],\n                    \"to\": [{\"email\": \"recipient.acc@cloud.appscode.com\"}],\n                    \"subject\": \"THIS IS THE SUBJECT\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"{{draft-mailboxId}}\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"asdfgh\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}],\n                    \"header:hehe\":\" asdxd\",\n                    \"header:hehe2\":\" asdxd\"\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n            //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/{{draft-mailboxId}}\": null,\n                    \"mailboxIds/{{sent-mailboxId}}\": true,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n\n    [ \"Email/set\", \n        { \n            \"accountId\": \"{{accountId}}\",\n     \n            \"create\": {\n                \"draft\": {\n                    \"from\": [{\"email\": \"usr$1@cloud.appscode.com\"}],\n                    \"to\": [{\"email\": \"usr$1@cloud.appscode.com\"}],\n                    \"subject\": \"THIS IS THE SUBJECT\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"{{draft-mailboxId}}\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"asdfgh\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}],\n                    \"header:hehe\":\" asdxd\",\n                    \"header:hehe2\":\" asdxd\"\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n            //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/{{draft-mailboxId}}\": null,\n                    \"mailboxIds/{{sent-mailboxId}}\": true,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1854,7 +2138,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{inbox-agentJWT}}",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -1868,7 +2152,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n    [ \"Email/set\", \n        { \n            \"accountId\": \"{{accountId}}\",\n\n            \"create\": {\n                \"draft\": {        \n                    \"inReplyTo\": [\n                            \"067297df-cffe-474a-a0c4-4f136550070c@mydomain\"\n                        ],\n                    \"references\": [\n                            \"067297df-cffe-474a-a0c4-4f136550070c@mydomain\"\n                     ],     \n                    \"from\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"to\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"subject\": \"Re: sdfgsdfg\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"3c122440-abbb-11ee-8dc7-5d9a8fe25dcd\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"THIS IS THE BODY 2\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}]\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n           // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/3c0ccd10-abbb-11ee-8dc7-5d9a8fe25dcd\": true,\n                    \"mailboxIds/3c122440-abbb-11ee-8dc7-5d9a8fe25dcd\": null,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n    [ \"Email/set\", \n        { \n            \"accountId\": \"{{accountId}}\",\n\n            \"create\": {\n                \"draft\": {        \n                    \"inReplyTo\": [\n                            \"Mime4j.45.c3c7914237cc47b1.195224498ee@cloud.appscode.com\"\n\n                        ],\n                    \"references\": [\n                            \"Mime4j.45.c3c7914237cc47b1.195224498ee@cloud.appscode.com\"\n\n                     ],     \n                    \"from\": [{\"email\": \"recipient.acc@cloud.appscode.com\"}],\n                    \"to\": [{\"email\": \"recipient.acc@cloud.appscode.com\"}],\n                    \"subject\": \"Email2\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"{{draft-mailboxId}}\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"THIS IS THE BODY 2\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}]\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n           // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/{{sent-mailboxId}}\": true,\n                    \"mailboxIds/{{draft-mailboxId}}\": null,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -2031,7 +2315,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{inbox-server-admin-token}}",
+									"value": "{{adminToken}}",
 									"type": "string"
 								}
 							]
@@ -2069,16 +2353,6 @@
 				{
 					"name": "Destroy All Emails (Blind)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{inbox-agentJWT}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
 						"header": [
 							{
@@ -2108,17 +2382,127 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Fetch email basic Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json; charset=utf-8"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n      \"filter\": {\"role\": \"Trash\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"accountId\": \"{{accountId}}\",\n        \"filter\": {\n             \"#inMailbox\": {\n                   \"name\": \"Mailbox/query\",\n                    \"resultOf\": \"mbQuery\",\n                    \"path\": \"ids/0\"\n            }\n        },\n        \"position\":0\n    }, \"0\" ],\n        \n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n        \"properties\": [\"messageId\"],\n        \"fetchAllBodyValues\": true,\n        \"fetchHTMLBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}:{{jmapPort}}/jmap",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{jmapPort}}",
+							"path": [
+								"jmap"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Destroy All Emails (Blind) Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json; charset=utf-8"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"{{accountId}}\",\n      \"filter\": {\"role\": \"inbox\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"accountId\": \"{{accountId}}\",\n        \"filter\": {\n             \"#inMailbox\": {\n                   \"name\": \"Mailbox/query\",\n                    \"resultOf\": \"mbQuery\",\n                    \"path\": \"ids/0\"\n            }\n        },\n        \"position\":0\n    }, \"0\" ],\n\n    [ \"Email/set\", {\n        \"accountId\": \"{{accountId}}\",\n\n        \"#destroy\": {\n            \"name\": \"Email/query\",\n            \"resultOf\": \"0\",\n            \"path\": \"ids\"\n        }\n    }, \"2\"]\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://{{host}}:{{jmapPort}}/jmap",
+							"protocol": "http",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{jmapPort}}",
+							"path": [
+								"jmap"
+							]
+						}
+					},
+					"response": []
 				}
 			]
+		},
+		{
+			"name": "send alert to webhook",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"receiver\":\"webhook_receiver\",\"status\":\"firing\",\"alerts\":[{\"status\":\"firing\",\"labels\":{\"alertname\":\"myheader0\",\"app\":\"postgres\",\"app_namespace\":\"demo\",\"container\":\"exporter\",\"endpoint\":\"metrics\",\"instance\":\"10.2.0.49:56790\",\"job\":\"postgres-stats\",\"k8s_group\":\"kubedb.com\",\"k8s_kind\":\"Postgres\",\"k8s_resource\":\"postgreses\",\"namespace\":\"demo\",\"pod\":\"postgres-0\",\"prometheus\":\"demo/prometheus-kube-prometheus-prometheus\",\"service\":\"postgres-stats\",\"severity\":\"critical\"},\"annotations\":{\"description\":\"Postgresql restarted\\n  postgres-0\\n  VALUE = 22.396456003189087\\n  LABELS = map[container:exporter endpoint:metrics instance:10.2.0.49:56790 job:postgres-stats namespace:demo pod:postgres-0 service:postgres-stats]\",\"summary\":\"Postgresql restarted (instance postgres-0)\"},\"startsAt\":\"2024-04-17T11:25:50.82Z\",\"endsAt\":\"0001-01-01T00:00:00Z\",\"generatorURL\":\"http://prometheus-kube-prometheus-prometheus.demo:9090/graph?g0.expr=time%28%29+-+pg_postmaster_start_time_seconds%7Bjob%3D%22postgres-stats%22%2Cnamespace%3D%22demo%22%7D+%3C+60&g0.tab=1\",\"fingerprint\":\"f3ef81f2de748079\"},{\"status\":\"firing\",\"labels\":{\"alertname\":\"myheader1\",\"app\":\"postgres\",\"app_namespace\":\"demo\",\"container\":\"exporter\",\"endpoint\":\"metrics\",\"instance\":\"10.2.0.49:56790\",\"job\":\"postgres-stats\",\"k8s_group\":\"kubedb.com\",\"k8s_kind\":\"Postgres\",\"k8s_resource\":\"postgreses\",\"namespace\":\"demo\",\"pod\":\"postgres-0\",\"prometheus\":\"demo/prometheus-kube-prometheus-prometheus\",\"service\":\"postgres-stats\",\"severity\":\"critical\"},\"annotations\":{\"description\":\"Postgresql restarted\\n  postgres-0\\n  VALUE = 22.396456003189087\\n  LABELS = map[container:exporter endpoint:metrics instance:10.2.0.49:56790 job:postgres-stats namespace:demo pod:postgres-0 service:postgres-stats]\",\"summary\":\"Postgresql restarted (instance postgres-0)\"},\"startsAt\":\"2024-04-17T11:25:50.82Z\",\"endsAt\":\"0001-01-01T00:00:00Z\",\"generatorURL\":\"http://prometheus-kube-prometheus-prometheus.demo:9090/graph?g0.expr=time%28%29+-+pg_postmaster_start_time_seconds%7Bjob%3D%22postgres-stats%22%2Cnamespace%3D%22demo%22%7D+%3C+60&g0.tab=1\",\"fingerprint\":\"f3ef81f2de748079\"}]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:8443/alerts",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"alerts"
+					]
+				},
+				"description": "Generated from cURL: curl -L -k -X POST 'http://localhost:8443/alerts' -H 'Content-Type: application/json' -d '{\"receiver\":\"webhook_receiver\",\"status\":\"firing\",\"alerts\":[{\"status\":\"firing\",\"labels\":{\"alertname\":\"myheader0\",\"app\":\"postgres\",\"app_namespace\":\"demo\",\"container\":\"exporter\",\"endpoint\":\"metrics\",\"instance\":\"10.2.0.49:56790\",\"job\":\"postgres-stats\",\"k8s_group\":\"kubedb.com\",\"k8s_kind\":\"Postgres\",\"k8s_resource\":\"postgreses\",\"namespace\":\"demo\",\"pod\":\"postgres-0\",\"prometheus\":\"demo/prometheus-kube-prometheus-prometheus\",\"service\":\"postgres-stats\",\"severity\":\"critical\"},\"annotations\":{\"description\":\"Postgresql restarted\\n  postgres-0\\n  VALUE = 22.396456003189087\\n  LABELS = map[container:exporter endpoint:metrics instance:10.2.0.49:56790 job:postgres-stats namespace:demo pod:postgres-0 service:postgres-stats]\",\"summary\":\"Postgresql restarted (instance postgres-0)\"},\"startsAt\":\"2024-04-17T11:25:50.82Z\",\"endsAt\":\"0001-01-01T00:00:00Z\",\"generatorURL\":\"http://prometheus-kube-prometheus-prometheus.demo:9090/graph?g0.expr=time%28%29+-+pg_postmaster_start_time_seconds%7Bjob%3D%22postgres-stats%22%2Cnamespace%3D%22demo%22%7D+%3C+60&g0.tab=1\",\"fingerprint\":\"f3ef81f2de748079\"},{\"status\":\"firing\",\"labels\":{\"alertname\":\"myheader1\",\"app\":\"postgres\",\"app_namespace\":\"demo\",\"container\":\"exporter\",\"endpoint\":\"metrics\",\"instance\":\"10.2.0.49:56790\",\"job\":\"postgres-stats\",\"k8s_group\":\"kubedb.com\",\"k8s_kind\":\"Postgres\",\"k8s_resource\":\"postgreses\",\"namespace\":\"demo\",\"pod\":\"postgres-0\",\"prometheus\":\"demo/prometheus-kube-prometheus-prometheus\",\"service\":\"postgres-stats\",\"severity\":\"critical\"},\"annotations\":{\"description\":\"Postgresql restarted\\n  postgres-0\\n  VALUE = 22.396456003189087\\n  LABELS = map[container:exporter endpoint:metrics instance:10.2.0.49:56790 job:postgres-stats namespace:demo pod:postgres-0 service:postgres-stats]\",\"summary\":\"Postgresql restarted (instance postgres-0)\"},\"startsAt\":\"2024-04-17T11:25:50.82Z\",\"endsAt\":\"0001-01-01T00:00:00Z\",\"generatorURL\":\"http://prometheus-kube-prometheus-prometheus.demo:9090/graph?g0.expr=time%28%29+-+pg_postmaster_start_time_seconds%7Bjob%3D%22postgres-stats%22%2Cnamespace%3D%22demo%22%7D+%3C+60&g0.tab=1\",\"fingerprint\":\"f3ef81f2de748079\"}]}'"
+			},
+			"response": []
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJleHAiOiAxMDAwMDAwMDAwMCwKICAicGVybWlzc2lvbnMiOiB7CiAgICAicGVybS5hZGRyZXNzLmdyb3Vwcy4qIjogWwogICAgICAiR0VUIiwKICAgICAgIlBPU1QiLAogICAgICAiREVMRVRFIgogICAgXSwKICAgICJwZXJtLmFkZHJlc3MuZ3JvdXBzLiouKiI6IFsKICAgICAgIlBVVCIsCiAgICAgICJERUxFVEUiCiAgICBdCiAgfSwKICAic3ViIjogInVzciQxQGNsb3VkLmFwcHNjb2RlLmNvbSIsCiAgInR5cGUiOiAiYWRtaW4iCn0.H6ACjYO_8iSvbT3yB0EQ4FYTpCbKYqhjQvEnZAXMzZ39gKsggaXqdqJc5OjsKE2964eYQlYdko1DQ0HCVxyStNxEiLLXhznh-B0KneEmgkOqpUOlgmnKQytN94PxsUaXHR33OqQwrN3J45gFlFh-quTM1EzYR-vzY3_INvrpS4WQwh2EWaHIC7yhPAdZ90RWDUS_Gkc4BS4f4jtBJjNgvusnrWjz-32b91bxfK4kZ7Y00YnXxU2X454kDixfZ551dHVGJOViURqHRj3OKMxxvjuDhT1gYMbA6J4x5jKjGOwcyYgwzZE8YfnuPwdXBuFpCYVCxGK2b4-iByGDSPwTXw",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					"pm.request.headers.add({ key: \"Connection\", value: \"close\" });"
+					""
 				]
 			}
 		},
@@ -2143,58 +2527,55 @@
 		},
 		{
 			"key": "adminToken",
-			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTg0Mjk2NTIsInBlcm1pc3Npb25zIjp7InBlcm0uYWRkcmVzcy5ncm91cHMuKi4qIjpbIlBVVCIsIkRFTEVURSJdfSwic3ViIjoiYWdlbnQkMmViNGZiMDUtNTQzOC00MGUyLTkxY2YtMmI3MjU3ZjEyMzQxXHUwMDI2YWdlbnQuZnJvbnQtZW5kLWxpbm9kZSQyZWI0ZmIwNS01NDM4LTQwZTItOTFjZi0yYjcyNTdmMTIzNDFcdTAwMjZjbHVzdGVyLnhcdTAwMjZ0eXBlLWFjY0BjbG91ZC5hcHBzY29kZS5jb20iLCJ0eXBlIjoiYWdlbnQifQ.HNF2hRuLGVn6ugbwiIEg9huvvTm11clCz9GDmhtcHcur4zhqQfQmA0POQ0NgK4K2aL1P-g2G9V-aT5DW6L4QwkTMNAoQKc2c_R0U0xcOGd39OTYVpsngZj1LRdvgT_OOqCybKf8J0R1hu5HLG7sSazoZTiUwCHwtXNhub0PDv5hXUXjXUKw9X6bn9p5nxdBpj5PwFj9tNepGKAYHJZF1wDB6GtnXwuwPDVqXeswe9MFVr_TW1f86sQC4UGhXz-IdKPLo5SDEUfGZ3hfGL_q4OKJJtrt4WQ5mke-mWP3n1bfkD3Bhdb4nHipwQ1-sEgGluuKSxPqTfsVYlXUyOa6iNhUii7r2PZZuIVBOXMOWkk-euqqz87e6VvVX8-_L2pbKrmJcfOY5HJZVX2JoJhzSHCkYlkW_R_NxrNHoijfN4lBaEhLg5EyKZczWzXdvxD8EIaX0T4xjuDBsuss_6PMOJamGES6emCoWYxmBd5CX7_ggbf-5PE5D9WJkKSTqCsFCNf7tjo2_QQUsqfzn9kUTBuQ6_GICbHsx-I1-Y77JgKwq27cFK5fgLK-IcbdlpZpc1SjH9LIGMKmQr75pga8EnbeafHqttqYR6a0x-_fHMAst0KINgJf0mhhokS_EzB0lMk0qbbx9CQ2sn7jHzz6I-RkxuUNNehrXKjpQdbsjrQY",
-			"type": "string"
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTg0Mjk2NTIsInBlcm1pc3Npb25zIjp7InBlcm0uYWRkcmVzcy5ncm91cHMuKi4qIjpbIlBVVCIsIkRFTEVURSJdfSwic3ViIjoiYWdlbnQkMmViNGZiMDUtNTQzOC00MGUyLTkxY2YtMmI3MjU3ZjEyMzQxXHUwMDI2YWdlbnQuZnJvbnQtZW5kLWxpbm9kZSQyZWI0ZmIwNS01NDM4LTQwZTItOTFjZi0yYjcyNTdmMTIzNDFcdTAwMjZjbHVzdGVyLnhcdTAwMjZ0eXBlLWFjY0BjbG91ZC5hcHBzY29kZS5jb20iLCJ0eXBlIjoiYWdlbnQifQ.HNF2hRuLGVn6ugbwiIEg9huvvTm11clCz9GDmhtcHcur4zhqQfQmA0POQ0NgK4K2aL1P-g2G9V-aT5DW6L4QwkTMNAoQKc2c_R0U0xcOGd39OTYVpsngZj1LRdvgT_OOqCybKf8J0R1hu5HLG7sSazoZTiUwCHwtXNhub0PDv5hXUXjXUKw9X6bn9p5nxdBpj5PwFj9tNepGKAYHJZF1wDB6GtnXwuwPDVqXeswe9MFVr_TW1f86sQC4UGhXz-IdKPLo5SDEUfGZ3hfGL_q4OKJJtrt4WQ5mke-mWP3n1bfkD3Bhdb4nHipwQ1-sEgGluuKSxPqTfsVYlXUyOa6iNhUii7r2PZZuIVBOXMOWkk-euqqz87e6VvVX8-_L2pbKrmJcfOY5HJZVX2JoJhzSHCkYlkW_R_NxrNHoijfN4lBaEhLg5EyKZczWzXdvxD8EIaX0T4xjuDBsuss_6PMOJamGES6emCoWYxmBd5CX7_ggbf-5PE5D9WJkKSTqCsFCNf7tjo2_QQUsqfzn9kUTBuQ6_GICbHsx-I1-Y77JgKwq27cFK5fgLK-IcbdlpZpc1SjH9LIGMKmQr75pga8EnbeafHqttqYR6a0x-_fHMAst0KINgJf0mhhokS_EzB0lMk0qbbx9CQ2sn7jHzz6I-RkxuUNNehrXKjpQdbsjrQY"
 		},
 		{
-			"key": "agentToken",
-			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImFkbWluIjp0cnVlLCJleHAiOjE5NDYyMzkwMjIsInBlcm1pc3Npb24iOnsicGVybS5hcGkudjEuZ3JvdXAiOiJ1cGRhdGUifX0.gkaY3kljuaOufmkXv-UOUY1HoK3G3d5-2aLlUuxG0V-53sUlxb7r97GIR5Upw9kDjnt0SV6fTTPfHIuh9iY46pneCwKUHB15palNOcZNZlGDkq6-ipgVWnppErwD5rOqCIh4ad08GmeAU8_2VJubZkw1rNJMu7zjfGoGvUHVuz38FxWu70CQcDGslHKAeFTMGpaRcY2GRuJNfbkpMpnhtXu9Wmqn_xK026wi6zEZXJ6--i-Yz4oPihGWyH2dqzWG9DSBt-L6ZD6pZGFEk_towrnuBs4GCozA9fnvwpA2IYkINS-pdWe9rbS1RfIql-XPkn5nSU4tk68Mn5KgTCdravnRqx_wOcVa-tO-AnxiZFLtZAqUjDbLa3E6I66cGsNxckfzu2etgIPNfSFeyfZYYIcm3fGwBavzNfmrDybIBDcPPH4esDsV5JOD_Xh_XgIhIuBJaWqLhzinDD-2BE8GIUYR6_YrxtqNaO9G4K9rOPe1fdKwUYsgZKO72RsRS8h70wrr-cEW1GnXbYkQqcniSx07MQDVAkrIW_l3uk7DnTuoujX_gZqSmhob8U9qiiDAkR5Pt53qxvzkX5OLNIhbrtnD_maclcEIZOkzzWnUivRIwfZ4P-_c94sMquLrEeX-2R7nWBhwMNm-rdpZ_JpfWDcLQAbxya7WjeSMpN9a2-o",
-			"type": "string"
+			"key": "adminTokenLocal",
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE5MTg0Mjk2NTIsInBlcm1pc3Npb25zIjp7InBlcm0uYWRkcmVzcy5ncm91cHMuKi4qIjpbIlBVVCIsIkRFTEVURSJdfSwic3ViIjoidXNyJDFAY2xvdWQuYXBwc2NvZGUuY29tIiwidHlwZSI6ImFkbWluIn0.oy3TbpPGYTnesGDf2nvHRopFfkn1PIXvOC8YPJw8zF9467-GSB0fq4cABp2WJ0Kb1GvmE08nCF0eNB4pRAoR8sHH-1r5aRt7Kv0nCaaWFqxQ7s4ZDMjfRxMFI7hLqJp6nH9rNBt4fl9IUn87B2PrzgmqcYi2xYkQ7LSA5EDcRoQLFUkyeenX44wxp89CN73Ed-9CjDb6Mpe-6eO6UaPEt1OMqVLOjAkdtbEH8P1GjgZzHaioZdCio9hRwansDPqDW6RFz7s0MaFm2ioD5NChQku6Bi_PHhbcCidOBg3MW8eYtX1F6sKT7w-J5moVn5qG1nyPXPKlcjSwceB1O7F4Hg"
 		},
 		{
 			"key": "jmapPort",
-			"value": "80",
-			"type": "string"
+			"value": "80"
 		},
 		{
 			"key": "accountId",
-			"value": "ad2fdd6ab1ed7f3c1325b7921bcda0cef3b0de491d0b7c011bc842514448cab6",
-			"type": "string"
+			"value": "ad2fdd6ab1ed7f3c1325b7921bcda0cef3b0de491d0b7c011bc842514448cab6"
 		},
 		{
 			"key": "draft-mailboxId",
-			"value": "0a1c24a0-2a0e-11ef-b253-95058fa091b3",
-			"type": "string"
+			"value": "0a1c24a0-2a0e-11ef-b253-95058fa091b3"
 		},
 		{
 			"key": "sent-mailboxId",
-			"value": "0a13e740-2a0e-11ef-b253-95058fa091b3",
-			"type": "string"
+			"value": "0a13e740-2a0e-11ef-b253-95058fa091b3"
 		},
 		{
 			"key": "b3host",
-			"value": "192.168.68.101",
-			"type": "string"
+			"value": "192.168.68.101"
 		},
 		{
 			"key": "b3token",
-			"value": "cc3fc1d2c51d10146c7c13f68682229b398ef84c",
-			"type": "string"
+			"value": "cc3fc1d2c51d10146c7c13f68682229b398ef84c"
 		},
 		{
 			"key": "clusterID",
-			"value": "643489f2-daec-45ad-a875-05a4d3b1e057",
-			"type": "string"
+			"value": "643489f2-daec-45ad-a875-05a4d3b1e057"
 		},
 		{
 			"key": "inbox-server-admin-token",
-			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE5MjI0ODk4MTksInBlcm1pc3Npb25zIjp7InBlcm0uYWRkcmVzcy5ncm91cHMuKi4qIjpbIlBVVCIsIkRFTEVURSJdfSwic3ViIjoidG1wdXNlcjNAbXlkb21haW4iLCJ0eXBlIjoiYWRtaW4ifQ.DncyebffiyxBqITBH5vcurco0L3_83ktsluGeMUIZGcTVplMUGKzwlqC3rgVlHcjrJY6CQyLepeTSATGbE3bDbNSYkIaIFpJFSlonAVg1vdR-qWltzkovICJA9Q2of_57VgAvNH9N83oEFMNAwC-83Al4vgd5QuB-VZRIONWVbo84YzdEcbvjbMIROJ9WDAzTrjHmbSQq49HyC1FsTuETN7s3XQgTviKreoklKVM3SCpOqfzZlKk511MdU-Ayg_jzs0Eq3ZiIV2fSm9yiQv13o13iTkeZPeZQkywXEjBi6c6pzbcEaxKuGNC5cu901W6-AB_iGNFcVjr-uw_eph8rg",
-			"type": "string"
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE5MjI0ODk4MTksInBlcm1pc3Npb25zIjp7InBlcm0uYWRkcmVzcy5ncm91cHMuKi4qIjpbIlBVVCIsIkRFTEVURSJdfSwic3ViIjoidG1wdXNlcjNAbXlkb21haW4iLCJ0eXBlIjoiYWRtaW4ifQ.DncyebffiyxBqITBH5vcurco0L3_83ktsluGeMUIZGcTVplMUGKzwlqC3rgVlHcjrJY6CQyLepeTSATGbE3bDbNSYkIaIFpJFSlonAVg1vdR-qWltzkovICJA9Q2of_57VgAvNH9N83oEFMNAwC-83Al4vgd5QuB-VZRIONWVbo84YzdEcbvjbMIROJ9WDAzTrjHmbSQq49HyC1FsTuETN7s3XQgTviKreoklKVM3SCpOqfzZlKk511MdU-Ayg_jzs0Eq3ZiIV2fSm9yiQv13o13iTkeZPeZQkywXEjBi6c6pzbcEaxKuGNC5cu901W6-AB_iGNFcVjr-uw_eph8rg"
 		},
 		{
-			"key": "tmpuser2",
-			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE5MjI0ODk4MTksInBlcm1pc3Npb25zIjp7InBlcm0uYWRkcmVzcy5ncm91cHMuKi4qIjpbIlBVVCIsIkRFTEVURSJdfSwic3ViIjoidG1wdXNlcjJAbXlkb21haW4iLCJ0eXBlIjoiYWRtaW4ifQ.lZvjgAQ845rAMR23_xWknhohwZCNRCb42mYA9jMUqaIUl-4ejfaG8PPLA6xnu5Ory4P-0H4ULDpqt0YkE9P0kRGthITw0m6xZ8siThUJRyglZKAIVnkobh3CsZGawZ-zoAOU48D9culn-TtWcLBEs4pkCZW7okLIL9o4jzsF0GkBAn42NejO3fGtkTkj7n4L1z2lihS-4Yy6BlE1XDBO7lTr6d8WyDfekeMwzR_wm5hJAJGM8WqTSXjrNjtEwVW2SBUov9oRp7r6gXSK12wQyy03plaLo5dxHtZSlaRhV9FJwat_AZkDKAWxB6UobuZojiL_jU4UkZXVHsuyyGr3Mw",
-			"type": "string"
+			"key": "inbox-ui-user",
+			"value": "usr&admin$1@cloud.appscode.com"
+		},
+		{
+			"key": "jwt_payload",
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImFkbWluIjp0cnVlLCJleHAiOjE5NDYyMzkwMjIsInBlcm1pc3Npb24iOnsicGVybS5hcGkudjEuZ3JvdXAiOiJ1cGRhdGUifX0.gkaY3kljuaOufmkXv-UOUY1HoK3G3d5-2aLlUuxG0V-53sUlxb7r97GIR5Upw9kDjnt0SV6fTTPfHIuh9iY46pneCwKUHB15palNOcZNZlGDkq6-ipgVWnppErwD5rOqCIh4ad08GmeAU8_2VJubZkw1rNJMu7zjfGoGvUHVuz38FxWu70CQcDGslHKAeFTMGpaRcY2GRuJNfbkpMpnhtXu9Wmqn_xK026wi6zEZXJ6--i-Yz4oPihGWyH2dqzWG9DSBt-L6ZD6pZGFEk_towrnuBs4GCozA9fnvwpA2IYkINS-pdWe9rbS1RfIql-XPkn5nSU4tk68Mn5KgTCdravnRqx_wOcVa-tO-AnxiZFLtZAqUjDbLa3E6I66cGsNxckfzu2etgIPNfSFeyfZYYIcm3fGwBavzNfmrDybIBDcPPH4esDsV5JOD_Xh_XgIhIuBJaWqLhzinDD-2BE8GIUYR6_YrxtqNaO9G4K9rOPe1fdKwUYsgZKO72RsRS8h70wrr-cEW1GnXbYkQqcniSx07MQDVAkrIW_l3uk7DnTuoujX_gZqSmhob8U9qiiDAkR5Pt53qxvzkX5OLNIhbrtnD_maclcEIZOkzzWnUivRIwfZ4P-_c94sMquLrEeX-2R7nWBhwMNm-rdpZ_JpfWDcLQAbxya7WjeSMpN9a2-o"
+		},
+		{
+			"key": "private_key1",
+			"value": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAutEivd/kNYS7wVZ2ke0AIINp1lPgKolPDGprNzoZxV9fb2sH\n/XWJr6dR7wdfjl9ndUmXurgJgLNn2R0l+Ffrwp+8gqpC83h22QR0iDPYkUyRp92X\n3OypvxvJLuj6dCy/q+QMKWv6C7uEeuKbLUC9omi8XWgPA16aslWhTQaaSGgy7sS3\nTB5CN9XugtUlKYGdM/imP1u9x8qUdXdfe5EYkfHr0RJnpu5NnZ80qqi8lLogFiAD\ndi4dEhs0JfLWpQqCgPM4eNHdyLmqznp584/ztIuUXX5Kr55YJUh8IPK6AOZlJ7cy\noZAFXWrgMGnQ/6+cUGPrfVZ/XcjBjdg86XUhuwIDAQABAoIBAD+M4TqiLSmfi5dL\naG5fpwloatqEEd+mcgOROAPDefzQYtCuIjuwfjQIwTCE25a9EZ6ueDUGYgUsAomz\nBrWigwrj9+ajML9OHW/ZuiKTMHrNB0eJdB2tTFk8hIW2r2xRxKoem5yDpL3U/k4n\nRA5y1Y+n/VvxCBpnVkyQIJzpQBac9qtzLGb2sRBAHI5uIYGEGtTKG49N8XzqbzR8\nI9e5hTfEXKrJzvEYOc4J4DuHGmjISSmoDI+HNjt34zwxMawsgqnI9uDA5HRLQT8h\n2uxXh2UHG+Eatq1xiXNXZqR2YFRXXBYgmGe/LW8hZ+c0HdNzIhKRbyL6ftZHZMN9\nQuxWBbECgYEA5iFgZez4JiJi0achrihSJjPjErgecGe1z9VDhcGK+q5YViVq4Vfg\n2Y3d5hcMEg97NNsq0WHSFigGps7Q8SDI8/AyEycFaTxVN9zSwAZOcH6qxzClFWTY\nuwUxZwqhqMLjeaYZQxJwu2mjLdnd/5XWrqsFn3Qk9t5g8zgjRVMvW8cCgYEAz9FM\nQFo4vBNqSNrAZTXN+JAvHDpDhFKZ4GdkguT6L8mhY1bWDnZ4sYPZ2rKrXWzwoQdF\nUiUJCAJI7deBpIH1GBTVzrIY02I1HykDW/iqK7otrjzfLonPhlVKzTSqcPSdwCcZ\nzqsHzeMqh5d4ZmuyVAfxfQRruw883vOwQSDQgm0CgYEA15ixTQwitudEGRIxFY4k\n2DGILMNdkQU4actshOT7pTqs+5f2d8Lynh6wop0467qhPLWPebXhMmyxPplHWn/S\ng+aloxfNk/e4BqvUrZ264t1odVB3eIGQIjYNQHHPXeGnZxJbXGDsSEgBXjVcK9Re\n2ijTDb2r27Qes/4F3S6/kYUCgYAgzc/0hIlaHtJzJ5yhHUojB1d4ZDYOKB/EDW4P\nP2fCrVg9XxKw+8B3fPGhlPx55d1h/czSd6giTIIIkTEUr7LplzhcxT4n9+OcxJOU\nK/9ooZ3eWBt+tCA++y2wkLSq2eIg18s6FUNJG6e1+ZH20N84ZnyXGGCNCY25P8w9\nq5leTQKBgQDGR3VcjeIp1sPQR0IPbBQcC9WSzEUfnv/lOwzBTRnI/ZTtSCZiB0Bn\nSiwYI9J8f6dFsv3OFuohvrG+HUBPEKo7IElHgYJ+Cx0LdmwvnROxZRZO4F4OufEs\n0tpIMtbi2ooHFxIW/ZKU8NiPI0MPjCam9utBCRm7F4y/XrcOZVGEag==\n-----END RSA PRIVATE KEY-----"
 		}
 	]
 }
