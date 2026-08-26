@@ -48,7 +48,7 @@ public class AutoDBAOutboundMailet extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = (MimeMessage) mail.getMessage();
-        String incident = required("incident");
+        String incident = incidentOf(message);
         String token = hmac(incident);
         String bundle = bundle(incident);
 
@@ -89,6 +89,19 @@ public class AutoDBAOutboundMailet extends GenericMailet {
         return "{\"incidentId\":\"" + escape(incident) + "\",\"quorum\":\""
             + escape(value("quorum", "1-of-1")) + "\",\"recipientsMode\":\""
             + escape(value("recipientsMode", "1to1")) + "\"}";
+    }
+
+    /**
+     * The incident ID travels per-message on the mail composed by the controller
+     * (see autodba-controller/internal/jamesbridge), never as static mailet config,
+     * since every outgoing email belongs to a different incident.
+     */
+    private String incidentOf(MimeMessage message) throws MessagingException {
+        String[] values = message.getHeader("X-AutoDBA-Incident");
+        if (values == null || values.length == 0 || values[0].isBlank()) {
+            throw new MessagingException("outbound mail is missing the X-AutoDBA-Incident header");
+        }
+        return values[0];
     }
 
     private String required(String name) throws MessagingException {

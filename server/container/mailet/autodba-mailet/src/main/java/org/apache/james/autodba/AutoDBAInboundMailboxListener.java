@@ -34,16 +34,33 @@ import java.util.regex.Pattern;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import jakarta.inject.Inject;
+
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.events.MailboxEvents;
 
 /**
  * A James EventBus listener for replies deposited in {@code incoming/}. The mailbox adapter
  * supplies message headers and body for each {@link MailboxEvents.Added} event.
+ *
+ * <p>Instantiated by James's Guice-backed listener loader from {@code listeners.xml}:
+ * <pre>
+ * &lt;listener&gt;
+ *   &lt;class&gt;org.apache.james.autodba.AutoDBAInboundMailboxListener&lt;/class&gt;
+ *   &lt;configuration&gt;
+ *     &lt;hmacSecret&gt;...&lt;/hmacSecret&gt;
+ *     &lt;controllerUrl&gt;http://autodba-controller:8080/autodba.v1.ControllerService/SubmitCommand&lt;/controllerUrl&gt;
+ *   &lt;/configuration&gt;
+ * &lt;/listener&gt;
+ * </pre>
  */
 public class AutoDBAInboundMailboxListener implements EventListener.GroupEventListener {
+    private static final String DEFAULT_CONTROLLER_URL = "http://autodba-controller:8080/autodba.v1.ControllerService/SubmitCommand";
     private static final Pattern INCIDENT = Pattern.compile("(INC-[A-Za-z0-9_-]+)");
     private static final Group GROUP = new AutoDBAInboundMailboxListenerGroup();
 
@@ -52,9 +69,14 @@ public class AutoDBAInboundMailboxListener implements EventListener.GroupEventLi
     private final String secret;
     private final AddedMessageReader messageReader;
 
+    @Inject
+    public AutoDBAInboundMailboxListener(MailboxManager mailboxManager, HierarchicalConfiguration<ImmutableNode> configuration) {
+        this(configuration.getString("hmacSecret"), new MailboxAddedMessageReader(mailboxManager),
+            HttpClient.newHttpClient(), URI.create(configuration.getString("controllerUrl", DEFAULT_CONTROLLER_URL)));
+    }
+
     public AutoDBAInboundMailboxListener(String hmacSecret, AddedMessageReader messageReader) {
-        this(hmacSecret, messageReader, HttpClient.newHttpClient(),
-            URI.create("http://autodba-controller:8080/autodba.v1.ControllerService/SubmitCommand"));
+        this(hmacSecret, messageReader, HttpClient.newHttpClient(), URI.create(DEFAULT_CONTROLLER_URL));
     }
 
     AutoDBAInboundMailboxListener(String hmacSecret, AddedMessageReader messageReader, HttpClient httpClient, URI controller) {
